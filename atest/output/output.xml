@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generated="20180502 20:21:16.904" generator="Robot 3.0.3 (Python 3.4.3 on win32)">
+<suite source="C:\Users\mrose\ws\robotframework\SnowLibrary\atest\acceptance\rest_api.robot" name="Rest Api" id="s1">
+<test name="Test All REST Query Conditions" id="s1-t1">
+<kw library="SnowLibrary.RESTQuery" name="Query Table Is">
+<doc>Sets the table that will be used for the query.</doc>
+<arguments>
+<arg>ticket</arg>
+</arguments>
+<msg timestamp="20180502 20:21:17.122" level="INFO">Query table is: ticket</msg>
+<status starttime="20180502 20:21:17.121" status="PASS" endtime="20180502 20:21:17.122"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Required Query Parameter Is">
+<doc>Adds the first (required) query parameter to a SNOW Query.  If another parameter has already been added, </doc>
+<arguments>
+<arg>contact_type</arg>
+<arg>EQUALS</arg>
+<arg>Service Catalog</arg>
+</arguments>
+<status starttime="20180502 20:21:17.122" status="PASS" endtime="20180502 20:21:17.123"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Add Query Parameter">
+<doc>Adds a parameter to the query.  Expected arguments are a logical operator (e.g. AND, OR, NQ), the field or table</doc>
+<arguments>
+<arg>AND</arg>
+<arg>state</arg>
+<arg>EQUALS</arg>
+<arg>7</arg>
+</arguments>
+<status starttime="20180502 20:21:17.123" status="PASS" endtime="20180502 20:21:17.124"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Add Query Parameter">
+<doc>Adds a parameter to the query.  Expected arguments are a logical operator (e.g. AND, OR, NQ), the field or table</doc>
+<arguments>
+<arg>AND</arg>
+<arg>approval</arg>
+<arg>CONTAINS</arg>
+<arg>Not</arg>
+</arguments>
+<status starttime="20180502 20:21:17.124" status="PASS" endtime="20180502 20:21:17.124"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Add Query Parameter">
+<doc>Adds a parameter to the query.  Expected arguments are a logical operator (e.g. AND, OR, NQ), the field or table</doc>
+<arguments>
+<arg>AND</arg>
+<arg>description</arg>
+<arg>STARTS WITH</arg>
+<arg>Req</arg>
+</arguments>
+<status starttime="20180502 20:21:17.125" status="PASS" endtime="20180502 20:21:17.125"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Add Query Parameter">
+<doc>Adds a parameter to the query.  Expected arguments are a logical operator (e.g. AND, OR, NQ), the field or table</doc>
+<arguments>
+<arg>AND</arg>
+<arg>description</arg>
+<arg>ENDS WITH</arg>
+<arg>.</arg>
+</arguments>
+<status starttime="20180502 20:21:17.157" status="PASS" endtime="20180502 20:21:17.157"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Add Query Parameter">
+<doc>Adds a parameter to the query.  Expected arguments are a logical operator (e.g. AND, OR, NQ), the field or table</doc>
+<arguments>
+<arg>AND</arg>
+<arg>sys_mod_count</arg>
+<arg>LeSs THaN</arg>
+<arg>500</arg>
+</arguments>
+<status starttime="20180502 20:21:17.158" status="PASS" endtime="20180502 20:21:17.158"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Add Query Parameter">
+<doc>Adds a parameter to the query.  Expected arguments are a logical operator (e.g. AND, OR, NQ), the field or table</doc>
+<arguments>
+<arg>AND</arg>
+<arg>sys_mod_count</arg>
+<arg>greater than</arg>
+<arg>1</arg>
+</arguments>
+<status starttime="20180502 20:21:17.159" status="PASS" endtime="20180502 20:21:17.159"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Add Query Parameter">
+<doc>Adds a parameter to the query.  Expected arguments are a logical operator (e.g. AND, OR, NQ), the field or table</doc>
+<arguments>
+<arg>AND</arg>
+<arg>reassignment_count</arg>
+<arg>BETWEEN</arg>
+<arg>-1</arg>
+<arg>100</arg>
+</arguments>
+<status starttime="20180502 20:21:17.160" status="PASS" endtime="20180502 20:21:17.160"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Add Query Parameter">
+<doc>Adds a parameter to the query.  Expected arguments are a logical operator (e.g. AND, OR, NQ), the field or table</doc>
+<arguments>
+<arg>AND</arg>
+<arg>number</arg>
+<arg>DOES NOT CONTAIN</arg>
+<arg>TKT555</arg>
+</arguments>
+<status starttime="20180502 20:21:17.161" status="PASS" endtime="20180502 20:21:17.162"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Add Query Parameter">
+<doc>Adds a parameter to the query.  Expected arguments are a logical operator (e.g. AND, OR, NQ), the field or table</doc>
+<arguments>
+<arg>AND</arg>
+<arg>u_task_categorization</arg>
+<arg>IS EMPTY</arg>
+</arguments>
+<status starttime="20180502 20:21:17.162" status="PASS" endtime="20180502 20:21:17.163"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Execute Query">
+<doc>Executes the query that has been created with the specified conditions AND sets the response to the first record</doc>
+<status starttime="20180502 20:21:17.163" status="PASS" endtime="20180502 20:22:12.382"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Get Individual Response Field">
+<doc>Returns the specified data field from the first record on the response, if available.</doc>
+<arguments>
+<arg>contact_type</arg>
+</arguments>
+<assign>
+<var>${contact_type}</var>
+</assign>
+<msg timestamp="20180502 20:22:12.384" level="INFO">${contact_type} = Service Catalog</msg>
+<status starttime="20180502 20:22:12.383" status="PASS" endtime="20180502 20:22:12.384"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Get Individual Response Field">
+<doc>Returns the specified data field from the first record on the response, if available.</doc>
+<arguments>
+<arg>state</arg>
+</arguments>
+<assign>
+<var>${state}</var>
+</assign>
+<msg timestamp="20180502 20:22:12.385" level="INFO">${state} = 7</msg>
+<status starttime="20180502 20:22:12.384" status="PASS" endtime="20180502 20:22:12.385"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Get Individual Response Field">
+<doc>Returns the specified data field from the first record on the response, if available.</doc>
+<arguments>
+<arg>approval</arg>
+</arguments>
+<assign>
+<var>${approval}</var>
+</assign>
+<msg timestamp="20180502 20:22:12.385" level="INFO">${approval} = Not Yet Requested</msg>
+<status starttime="20180502 20:22:12.385" status="PASS" endtime="20180502 20:22:12.385"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Get Individual Response Field">
+<doc>Returns the specified data field from the first record on the response, if available.</doc>
+<arguments>
+<arg>number</arg>
+</arguments>
+<assign>
+<var>${number}</var>
+</assign>
+<msg timestamp="20180502 20:22:12.386" level="INFO">${number} = TKT0463293</msg>
+<status starttime="20180502 20:22:12.386" status="PASS" endtime="20180502 20:22:12.386"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Get Individual Response Field">
+<doc>Returns the specified data field from the first record on the response, if available.</doc>
+<arguments>
+<arg>description</arg>
+</arguments>
+<assign>
+<var>${description}</var>
+</assign>
+<msg timestamp="20180502 20:22:12.386" level="INFO">${description} = Requester: Binish Raja
+Source Hostname: 10.3.109.21
+Source IP: 10.3.109.21
+Destination Hostname: 10.6.202.13, 10.6.202.14, 10.6.202.15, 10.6.208.69, 10.6.208.70, 10.6.202.213, 10.6.202.214, 10.6.20...</msg>
+<status starttime="20180502 20:22:12.386" status="PASS" endtime="20180502 20:22:12.387"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Get Individual Response Field">
+<doc>Returns the specified data field from the first record on the response, if available.</doc>
+<arguments>
+<arg>sys_mod_count</arg>
+</arguments>
+<assign>
+<var>${sys_mod_count}</var>
+</assign>
+<msg timestamp="20180502 20:22:12.387" level="INFO">${sys_mod_count} = 10</msg>
+<status starttime="20180502 20:22:12.387" status="PASS" endtime="20180502 20:22:12.387"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Get Individual Response Field">
+<doc>Returns the specified data field from the first record on the response, if available.</doc>
+<arguments>
+<arg>sys_mod_count</arg>
+</arguments>
+<assign>
+<var>${reassignment_count}</var>
+</assign>
+<msg timestamp="20180502 20:22:12.388" level="INFO">${reassignment_count} = 10</msg>
+<status starttime="20180502 20:22:12.388" status="PASS" endtime="20180502 20:22:12.388"></status>
+</kw>
+<kw library="SnowLibrary.RESTQuery" name="Get Individual Response Field">
+<doc>Returns the specified data field from the first record on the response, if available.</doc>
+<arguments>
+<arg>u_task_categorization</arg>
+</arguments>
+<assign>
+<var>${u_task_categorization}</var>
+</assign>
+<msg timestamp="20180502 20:22:12.389" level="INFO">${u_task_categorization} = </msg>
+<status starttime="20180502 20:22:12.388" status="PASS" endtime="20180502 20:22:12.389"></status>
+</kw>
+<kw library="BuiltIn" name="Should Be Equal As Strings">
+<doc>Fails if objects are unequal after converting them to strings.</doc>
+<arguments>
+<arg>${contact_type}</arg>
+<arg>Service Catalog</arg>
+</arguments>
+<status starttime="20180502 20:22:12.389" status="PASS" endtime="20180502 20:22:12.389"></status>
+</kw>
+<kw library="BuiltIn" name="Should Be Equal As Strings">
+<doc>Fails if objects are unequal after converting them to strings.</doc>
+<arguments>
+<arg>${state}</arg>
+<arg>7</arg>
+</arguments>
+<status starttime="20180502 20:22:12.390" status="PASS" endtime="20180502 20:22:12.390"></status>
+</kw>
+<kw library="BuiltIn" name="Should Not Contain">
+<doc>Fails if ``container`` contains ``item`` one or more times.</doc>
+<arguments>
+<arg>${number}</arg>
+<arg>TKT555</arg>
+</arguments>
+<status starttime="20180502 20:22:12.390" status="PASS" endtime="20180502 20:22:12.390"></status>
+</kw>
+<kw library="BuiltIn" name="Should Contain">
+<doc>Fails if ``container`` does not contain ``item`` one or more times.</doc>
+<arguments>
+<arg>${approval}</arg>
+<arg>Not</arg>
+</arguments>
+<status starttime="20180502 20:22:12.391" status="PASS" endtime="20180502 20:22:12.391"></status>
+</kw>
+<kw library="BuiltIn" name="Should Start With">
+<doc>Fails if the string ``str1`` does not start with the string ``str2``.</doc>
+<arguments>
+<arg>${description}</arg>
+<arg>Req</arg>
+</arguments>
+<status starttime="20180502 20:22:12.391" status="PASS" endtime="20180502 20:22:12.391"></status>
+</kw>
+<kw library="BuiltIn" name="Should End With">
+<doc>Fails if the string ``str1`` does not end with the string ``str2``.</doc>
+<arguments>
+<arg>${description}</arg>
+<arg>.</arg>
+</arguments>
+<status starttime="20180502 20:22:12.392" status="PASS" endtime="20180502 20:22:12.392"></status>
+</kw>
+<kw library="BuiltIn" name="Should Be True">
+<doc>Fails if the given condition is not true.</doc>
+<arguments>
+<arg>${sys_mod_count} &lt; 500</arg>
+</arguments>
+<status starttime="20180502 20:22:12.392" status="PASS" endtime="20180502 20:22:12.392"></status>
+</kw>
+<kw library="BuiltIn" name="Should Be True">
+<doc>Fails if the given condition is not true.</doc>
+<arguments>
+<arg>${sys_mod_count} &gt; 1</arg>
+</arguments>
+<status starttime="20180502 20:22:12.393" status="PASS" endtime="20180502 20:22:12.393"></status>
+</kw>
+<kw library="BuiltIn" name="Should Be True">
+<doc>Fails if the given condition is not true.</doc>
+<arguments>
+<arg>${reassignment_count} &lt;= 101</arg>
+</arguments>
+<status starttime="20180502 20:22:12.393" status="PASS" endtime="20180502 20:22:12.393"></status>
+</kw>
+<kw library="BuiltIn" name="Should Be True">
+<doc>Fails if the given condition is not true.</doc>
+<arguments>
+<arg>${reassignment_count} &gt;= -1</arg>
+</arguments>
+<status starttime="20180502 20:22:12.394" status="PASS" endtime="20180502 20:22:12.394"></status>
+</kw>
+<kw library="BuiltIn" name="Should Be Empty">
+<doc>Verifies that the given item is empty.</doc>
+<arguments>
+<arg>${u_task_categorization}</arg>
+</arguments>
+<msg timestamp="20180502 20:22:12.394" level="INFO">Length is 0</msg>
+<status starttime="20180502 20:22:12.394" status="PASS" endtime="20180502 20:22:12.394"></status>
+</kw>
+<tags>
+<tag>parameters</tag>
+<tag>query</tag>
+<tag>rest</tag>
+</tags>
+<status starttime="20180502 20:21:17.120" status="PASS" critical="yes" endtime="20180502 20:22:12.394"></status>
+</test>
+<doc>Acceptance tests for SNOW REST API keywords</doc>
+<status starttime="20180502 20:21:16.906" status="PASS" endtime="20180502 20:22:12.395"></status>
+</suite>
+<statistics>
+<total>
+<stat fail="0" pass="1">Critical Tests</stat>
+<stat fail="0" pass="1">All Tests</stat>
+</total>
+<tag>
+<stat fail="0" pass="1">parameters</stat>
+<stat fail="0" pass="1">query</stat>
+<stat fail="0" pass="1">rest</stat>
+</tag>
+<suite>
+<stat fail="0" pass="1" name="Rest Api" id="s1">Rest Api</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>
