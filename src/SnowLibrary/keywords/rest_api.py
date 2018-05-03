@@ -154,15 +154,9 @@ class RESTQuery:
         data records is not yet supported.
         """
         query_resource = self.client.resource(api_path="/table/{query_table}".format(query_table=self.query_table))
-        try:    # Catch empty queries
+        try:    # Catch empty queries or errors making the request
             self.response = query_resource.get(query=self.query, stream=True).first_or_none()
-        except QueryEmpty as e:
-            logger.error(e.args)
-            self._reset_query()
-            raise
-        try:    # Catch errors making the request
-            self.response = query_resource.get(query=self.query, stream=True).first_or_none()
-        except RequestException as e:
+        except (QueryEmpty, RequestException) as e:
             logger.error(e.args)
             self._reset_query()
             raise
