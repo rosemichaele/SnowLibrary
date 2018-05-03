@@ -142,7 +142,7 @@ class RESTQuery:
     def required_query_parameter_is(self, field, condition_type, param_1=None, param_2=None):
         """
         Adds the first (required) query parameter to a SNOW Query.  If another parameter has already been added, 
-        this keyword will fail. Otherwise, this is the same as `Add Query Parameter`."
+        this keyword will fail. Otherwise, this is the same as `Add Query Parameter`.
         """
         self.add_query_parameter("NONE", field.lower(), condition_type, param_1, param_2)
 
