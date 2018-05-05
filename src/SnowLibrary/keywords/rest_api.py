@@ -34,9 +34,9 @@ class RESTQuery:
         The following arguments can be optionally provided when importing this library:
         - ``host``: The URL to your target ServiceNow instance (e.g. https://iceuat.service-now.com/). If none is provided,
                     the library will attempt to use the ``SNOW_TEST_URL`` environment variable.
-        - ``user``: The username to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the
+        - ``user``: The username to use when authenticating the ServiceNow REST client. This can, and *should*, be set using
                     the ``SNOW_REST_USER`` environment variable.
-        - ``password``:  The password to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the
+        - ``password``:  The password to use when authenticating the ServiceNow REST client. This can, and *should*, be set using
                     the ``SNOW_REST_PASS`` environment variable.
         - ``query_table``: The table to query.  This can be changed or set at any time with the `Query Table Is` keyword.
         - ``response``: Set the response object from the ServiceNow REST API (intended to be used for testing).
