@@ -30,13 +30,29 @@ class RESTQuery:
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
 
     def __init__(self, host=None, user=None, password=None, query_table=None, response=None):
+        """
+        The following arguments can be optionally provided when importing this library:
+        - ``host``: The URL to your target ServiceNow instance (e.g. https://iceuat.service-now.com/). If none is provided,
+                    the library will attempt to use the ``SNOW_TEST_URL`` environment variable.
+        - ``user``: The username to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the
+                    the ``SNOW_REST_USER`` environment variable.
+        - ``password``:  The password to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the
+                    the ``SNOW_REST_PASS`` environment variable.
+        - ``query_table``: The table to query.  This can be changed or set at any time with the `Query Table Is` keyword.
+        - ``response``: Set the response object from the ServiceNow REST API (intended to be used for testing).
+
+        """
         if not host:
             self.host = os.environ.get("SNOW_TEST_URL")
         if not user:
             self.user = os.environ.get("SNOW_REST_USER")
         if not password:
             self.password = os.environ.get("SNOW_REST_PASS")
-        self.instance = urlparse(self.host).netloc.split(".")[0]
+        try:
+            self.instance = urlparse(self.host).netloc.split(".")[0]
+        except TypeError:
+            logger.error("Unable to determine SNOW Instance. Have environment variables been set correctly?")
+            raise
         self.client = pysnow.Client(instance=self.instance, user=self.user, password=self.password)
         self.query_table = query_table
         self.query = pysnow.QueryBuilder()
