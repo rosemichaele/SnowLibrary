@@ -9,7 +9,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='robotframework-snowlibrary',
-    version='0.2.2',
+    version='1.0.0',
     url='',
     license='Apache License 2.0',
     author='Michael Rose',

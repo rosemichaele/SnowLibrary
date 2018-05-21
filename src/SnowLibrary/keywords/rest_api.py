@@ -115,7 +115,7 @@ class RESTQuery:
         """
         self.query = pysnow.QueryBuilder()
 
-    def _get_record_by_sys_id(self, sys_id):
+    def get_record_by_sys_id(self, sys_id):
         """
         Helper method to retrieve an individual SNOW record given the sys_id. Query table must already be set.
         Any other un-executed query parameters will be lost.
