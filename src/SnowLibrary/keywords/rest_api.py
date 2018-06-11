@@ -44,10 +44,16 @@ class RESTQuery:
         """
         if not host:
             self.host = os.environ.get("SNOW_TEST_URL")
+        else:
+            self.host = host
         if not user:
             self.user = os.environ.get("SNOW_REST_USER")
+        else:
+            self.user=user
         if not password:
             self.password = os.environ.get("SNOW_REST_PASS")
+        else:
+            self.password = password
         try:
             self.instance = urlparse(self.host).netloc.split(".")[0]
         except TypeError:
