@@ -1,5 +1,8 @@
 # Custom additions
 atest/output/*
+utest/output/*
+Scripts/
+selenium/
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template
@@ -30,6 +33,8 @@ var/
 *.egg
 pyvenv.cfg
 *.idea
+pip-selfcheck.json
+*.pytest_cache/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
