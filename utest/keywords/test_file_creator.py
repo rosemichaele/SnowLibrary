@@ -1,3 +1,4 @@
+import os
 import string
 import re
 
@@ -9,10 +10,12 @@ from SnowLibrary.keywords.file_creator import DataFile, DataRow, DataField
 class TestDataFile:
     def test_define_file_name(self):
         f = DataFile()
-        f.define_file_name("C:\\User\\mrose\\ws")
-        assert f.absolute_name == "C:\\User\\mrose\\ws"
-        f2 = DataFile("/My/File/Name.py")
-        assert f2.absolute_name == "/My/File/Name.py"
+        if os.path.sep == "\\":
+            f.define_file_name("C:\\User\\mrose\\ws")
+            assert f.absolute_name == "C:\\User\\mrose\\ws"
+        else:
+            f2 = DataFile("/My/File/Name.py")
+            assert f2.absolute_name == "/My/File/Name.py"
 
     def test_file_name_is_not_absolute(self):
         f = DataFile()
