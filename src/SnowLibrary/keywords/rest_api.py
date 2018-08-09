@@ -34,9 +34,9 @@ class RESTQuery:
         The following arguments can be optionally provided when importing this library:
         - ``host``: The URL to your target ServiceNow instance (e.g. https://iceuat.service-now.com/). If none is provided,
                     the library will attempt to use the ``SNOW_TEST_URL`` environment variable.
-        - ``user``: The username to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the
+        - ``user``: The username to use when authenticating the ServiceNow REST client. This can, and *should*, be set using
                     the ``SNOW_REST_USER`` environment variable.
-        - ``password``:  The password to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the
+        - ``password``:  The password to use when authenticating the ServiceNow REST client. This can, and *should*, be set using
                     the ``SNOW_REST_PASS`` environment variable.
         - ``query_table``: The table to query.  This can be changed or set at any time with the `Query Table Is` keyword.
         - ``response``: Set the response object from the ServiceNow REST API (intended to be used for testing).
@@ -44,10 +44,16 @@ class RESTQuery:
         """
         if not host:
             self.host = os.environ.get("SNOW_TEST_URL")
+        else:
+            self.host = host
         if not user:
             self.user = os.environ.get("SNOW_REST_USER")
+        else:
+            self.user=user
         if not password:
             self.password = os.environ.get("SNOW_REST_PASS")
+        else:
+            self.password = password
         try:
             self.instance = urlparse(self.host).netloc.split(".")[0]
         except TypeError:
@@ -115,7 +121,7 @@ class RESTQuery:
         """
         self.query = pysnow.QueryBuilder()
 
-    def _get_record_by_sys_id(self, sys_id):
+    def get_record_by_sys_id(self, sys_id):
         """
         Helper method to retrieve an individual SNOW record given the sys_id. Query table must already be set.
         Any other un-executed query parameters will be lost.

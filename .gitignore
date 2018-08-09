@@ -1,5 +1,9 @@
 # Custom additions
 atest/output/*
+atest/acceptance/output/*
+utest/output/*
+Scripts/
+selenium/
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template
@@ -28,6 +32,10 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+pyvenv.cfg
+*.idea
+pip-selfcheck.json
+*.pytest_cache/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -76,6 +84,7 @@ target/
 
 # pyenv
 .python-version
+bin/
 
 # celery beat schedule file
 celerybeat-schedule

@@ -9,7 +9,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='robotframework-snowlibrary',
-    version='0.2.2',
+    version='1.1.0',
     url='',
     license='Apache License 2.0',
     author='Michael Rose',
@@ -18,7 +18,7 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages('src', exclude=['contrib', 'docs', 'tests']),
     install_requires=['requests', 'bs4', 'selenium', 'robotframework', 'robotframework-seleniumlibrary', 'docutils',
-                      'robotremoteserver', 'pysnow'],
+                      'robotremoteserver', 'pysnow', 'robotframework-sshlibrary', 'rstr'],
     description='A Robot Framework Library with keywords for testing ServiceNow.',
     # Test requirements
     setup_requires=['pytest-runner'],
