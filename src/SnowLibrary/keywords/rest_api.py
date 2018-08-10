@@ -240,8 +240,6 @@ class RESTQuery:
         | ${actual_num}=            | Get Records Created before    | ${time}         |     # Returns the number of records created in proc_po before the given time. |
         | Should Be Equal           | ${actual_num}                 | ${expected_num} |    
         """
-        bi = BuiltIn()
-        now = bi.get_time()
         return self.get_records_created_in_date_range('1970-01-01 00:00:01', when)
 
     @keyword
@@ -273,7 +271,8 @@ class RESTQuery:
                                  " the format YYYY-MM-DD hh:mm:ss.")
 
         query_resource = self.client.resource(api_path="/table/{query_table}".format(query_table=self.query_table))
-        content = query_resource.get(query="sys_created_onBETWEENjavascript:gs.dateGenerate('{start}')@javascript:gs.dateGenerate('{end}')".format(start=start, end=end))
+        fields = ['sys_id']
+        content = query_resource.get(query="sys_created_onBETWEENjavascript:gs.dateGenerate('{start}')@javascript:gs.dateGenerate('{end}')".format(start=start, end=end), fields=fields)
         num_records = len(content.all())
         logger.info("Found {num} records in date range.".format(num=num_records))
         return num_records
