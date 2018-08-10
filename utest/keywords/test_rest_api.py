@@ -36,8 +36,8 @@ class TestRESTQuery:
         assert "Invalid condition type specified." in str(e)
         r.required_query_parameter_is(field="sys_id", condition_type="EQUALS", param_1="ehe876387364nkje")
         with pytest.raises(AssertionError) as e:
-            r.add_query_parameter("AND", field="number", condition_type="INVALID", param_1="TKT546259")
-        assert "Invalid operand and/or query type." in str(e)
+            r.add_query_parameter("INVALID", field="number", condition_type="EQUALS", param_1="TKT546259")
+        assert "Invalid operand" in str(e)
 
     def test_is_empty_query_required_if_no_params(self):
         r = RESTQuery()
@@ -108,3 +108,12 @@ class TestRESTQuery:
         with pytest.raises(AssertionError) as e:
             r.get_records_created_in_date_range("Michael Rules", "2012-12-12")
         assert "Input date arguments were not provided in the correct format. Verify that they are in the format YYYY-MM-DD hh:mm:ss." in str(e)
+
+    def test_required_query_parameter_is_date_field(self):
+        r = RESTQuery()
+        r.query_table_is("incident")
+        try:
+            r.required_query_parameter_is("sys_created_on", "BETWEEN", "2016-05-02 09:45:01", "2016-05-09 09:45:01", is_date_field=True)
+            r.add_query_parameter("OR", "sys_updated_on", "EQUALS", "2018-08-10 10:23:40")
+        except AssertionError:
+            pytest.fail("Unexpected AssertionError raised when setting date field query parameter.")

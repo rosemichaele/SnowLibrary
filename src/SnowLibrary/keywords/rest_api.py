@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import datetime
 from urllib.parse import urlparse
 
@@ -17,19 +18,16 @@ class RESTQuery:
     query types and operands are as follows (case-insensitive):
     
     VALID_QUERY_TYPES = ["EQUALS", "DOES NOT EQUAL", "CONTAINS", "DOES NOT CONTAIN" "STARTS WITH", "ENDS WITH",
-                         "IS EMPTY"]
+                         "IS EMPTY", "GREATER THAN", "LESS THAN"]
                          
     VALID_OPERANDS = ["AND", "OR", "NQ"]
     """
-    VALID_QUERY_TYPES = {"EQUALS": "equals", "DOES NOT EQUAL": "not_equals",
-                         "CONTAINS": "contains", "DOES NOT CONTAIN": "not_contains",
-                         "STARTS WITH": "starts_with", "ENDS WITH": "ends_with",
-                         "GREATER THAN": "greater_than", "LESS THAN": "less_than",
-                         "IS EMPTY": "is_empty()", "BETWEEN": "between"}
-
-    VALID_OPERANDS = {"AND": "AND()", "OR": "OR()", "NQ": "NQ()"}
-
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
+
+    VALID_QUERY_TYPES = ["EQUALS", "DOES NOT EQUAL", "CONTAINS", "DOES NOT CONTAIN", "STARTS WITH", "ENDS WITH",
+                         "IS EMPTY", "GREATER THAN", "LESS THAN", "BETWEEN"]
+
+    VALID_OPERANDS = ["AND", "OR", "NQ"]
 
     def __init__(self, host=None, user=None, password=None, query_table=None, response=None):
         """
@@ -67,55 +65,94 @@ class RESTQuery:
         self.query = pysnow.QueryBuilder()
         self.response = response
 
+    @staticmethod
+    def _parse_datetime(date):
+        """
+        Parse an input date string in the form ``YYYY-MM-DD hh:mm:ss`` and return an equivalent Python datetime object.
+        """
+        try:
+            year, month, day = date.split()[0].split("-")
+            hour, minute, second = date.split()[1].split(":")
+            dt = datetime(int(year), int(month), int(day), int(hour), int(minute), int(second))
+        except (KeyError, ValueError, IndexError):
+            raise AssertionError("Input date arguments were not provided in the correct format. Verify that they are in"
+                                 " the format YYYY-MM-DD hh:mm:ss.")
+        return dt
+
     def _add_valid_query_parameter(self, logical, field, condition_type, param_1=None, param_2=None):
         """
         Helper function to handle adding parameters to a query, which are then passed to the pysnow.QueryBuilder
         object.
         """
-        qb_function = self.VALID_QUERY_TYPES.get(condition_type.upper())
-        qb_operand = self.VALID_OPERANDS.get(logical.upper())
         if logical == "NONE":
-            query = "self.query.field('{field}').{condition_type}".format(field=field,
-                                                                          condition_type=qb_function)
+            self.query.field('{}'.format(field))
+        elif logical.upper() == "AND":
+            self.query.AND().field('{}'.format(field))
+        elif logical.upper() == "OR":
+            self.query.AND().field('{}'.format(field))
         else:
-            query = "self.query.{logical}.field('{field}').{condition_type}".format(field=field,
-                                                                                    logical=qb_operand,
-                                                                                    condition_type=qb_function)
-        if not param_1 and not param_2:
+            self.query.NQ().field('{}'.format(field))
+
+        if param_1 is None and param_2 is None:
             if condition_type.upper() != "IS EMPTY":
                 raise AssertionError("Unexpected arguments for condition type {condition_type}: expected 1 or 2 arguments, but got "
                                      "none.".format(condition_type=condition_type.upper()))
             else:
-                logger.debug("Query added is: {query}".format(query=query))
                 logger.debug("sysparm_query contains: {q}".format(q=self.query._query))
-                self.query = eval(query)
+                self.query.is_empty()
 
-        elif not param_2:
+        elif param_2 is None:
             if condition_type.upper() in ["IS EMPTY", "BETWEEN"]:
                 raise AssertionError("Unexpected arguments for condition type {condition_type}: expected 0 or 2 arguments,"
                                      " but got 1.".format(condition_type=condition_type.upper()))
             else:
-                if condition_type.upper() in ["GREATER THAN", "LESS THAN"]:
-                    query += "({param})".format(param=param_1)
-                else:
-                    query += "('{param}')".format(param=param_1)
-                logger.debug("Query added is: {query}".format(query=query))
+                if condition_type.upper() == "GREATER THAN":
+                    if isinstance(param_1, datetime):
+                        self.query.greater_than(param_1)
+                    else:
+                        try:
+                            self.query.greater_than(int(param_1))
+                        except AssertionError:
+                            raise AssertionError("Invalid parameter for this query type, must be an integer or a date.")
+                elif condition_type.upper() == "LESS THAN":
+                    if isinstance(param_1, datetime):
+                        self.query.less_than(param_1)
+                    else:
+                        try:
+                            self.query.less_than(int(param_1))
+                        except AssertionError:
+                            raise AssertionError("Invalid parameter for this query type, must be an integer or a date.")
+                elif condition_type.upper() == "EQUALS":
+                    self.query.equals('{}'.format(param_1))
+                elif condition_type.upper() == "DOES NOT EQUAL":
+                    self.query.not_equals('{}'.format(param_1))
+                elif condition_type.upper() == "CONTAINS":
+                    self.query.contains('{}'.format(param_1))
+                elif condition_type.upper() == "DOES NOT CONTAIN":
+                    self.query.not_contains('{}'.format(param_1))
+                elif condition_type.upper() == "STARTS WITH":
+                    self.query.starts_with('{}'.format(param_1))
+                elif condition_type.upper() == "ENDS WITH":
+                    self.query.ends_with('{}'.format(param_1))
                 logger.debug("sysparm_query contains: {q}".format(q=self.query._query))
-                self.query = eval(query)
 
         else:
             if condition_type.upper() != "BETWEEN":
                 raise AssertionError("Unexpected arguments for condition type {condition_type}: expected 0 or 1 argument,"
                                      " but got 2.".format(condition_type=condition_type.upper()))
             else:
-                query += "({param_1}, {param_2})".format(param_1=param_1, param_2=param_2)
-                logger.debug("Query added is: {query}".format(query=query), html=True)
-                logger.debug("sysparm_query is contains: {q}".format(q=self.query._query))
-                self.query = eval(query)
+                if isinstance(param_1, datetime) and isinstance(param_2, datetime):
+                    self.query.between(param_1, param_2)
+                else:
+                    try:
+                        self.query.between(int(param_1), int(param_2))
+                    except AssertionError:
+                        raise AssertionError("Invalid parameter for this query type, must be and integer or a date")
+                logger.debug("sysparm_query contains: {q}".format(q=self.query._query))
 
     def _query_is_empty(self):
         """Checks if there are any current query parameters."""
-        return not self.query.current_field
+        return not self.query._query
 
     def _reset_query(self):
         """
@@ -143,13 +180,23 @@ class RESTQuery:
         logger.info("Query table is: {query_table}".format(query_table=query_table))
 
     @keyword
-    def add_query_parameter(self, logical, field, condition_type, param_1=None, param_2=None):
+    def add_query_parameter(self, logical, field, condition_type, param_1=None, param_2=None, is_date_field=False):
         """
         Adds a parameter to the query.  Expected arguments are a logical operator (e.g. AND, OR, NQ), the field or table
         column to use (e.g. number, state), the condition type, and up to 2 query parameters depending on the type of 
         query.  For example, the EMPTY query type does not require any parameters, CONTAINS requires one parameter, and 
-        BETWEEN requires two parameters.
+        BETWEEN requires two parameters. If the field that is being queried against in this parameter is a date field, 
+        then is_date_filed must be set to True or this keyword will fail in execution. In this case, parameters must also 
+        be provided in the format ``YYYY-MM-DD hh:mm:ss`` for proper parsing to a Python datetime object. For example:
+        
+        | Add Query Parameter | AND | sys_created_on | BETWEEN | 2018-08-10 00:00:00 | 2018-08-15 23:59:59 |
         """
+        if is_date_field:
+            if param_1 is not None:
+                param_1 = self._parse_datetime(param_1)
+            if param_2 is not None:
+                param_2 = self._parse_datetime(param_2)
+
         if logical == "NONE":
             if not self._query_is_empty():
                 raise AssertionError("This is not the first parameter in the query, so you must first specify "
@@ -166,15 +213,20 @@ class RESTQuery:
             elif logical.upper() in self.VALID_OPERANDS and condition_type.upper() in self.VALID_QUERY_TYPES:
                 self._add_valid_query_parameter(logical, field.lower(), condition_type, param_1, param_2)
             else:
-                raise AssertionError("Invalid operand and/or query type.".format(l=logical, q=condition_type))
+                raise AssertionError("Invalid operand '{l}' and/or query type '{q}'.".format(l=logical, q=condition_type))
 
     @keyword
-    def required_query_parameter_is(self, field, condition_type, param_1=None, param_2=None):
+    def required_query_parameter_is(self, field, condition_type, param_1=None, param_2=None, is_date_field=False):
         """
         Adds the first (required) query parameter to a SNOW Query.  If another parameter has already been added, 
-        this keyword will fail. Otherwise, this is the same as `Add Query Parameter`.
+        this keyword will fail. Otherwise, this is the same as `Add Query Parameter`.  If the field that is being
+        queried against in this parameter is a date field, then is_date_filed must be set to True or this keyword
+        will fail in execution.  In this case, parameters must also be provided in the format ``YYYY-MM-DD hh:mm:ss``
+        for proper parsing to a Python datetime object. For example:
+        
+        | Required Query Parameter Is | sys_created_on | BETWEEN | 2018-08-10 00:00:00 | 2018-08-15 23:59:59 |
         """
-        self.add_query_parameter("NONE", field.lower(), condition_type, param_1, param_2)
+        self.add_query_parameter("NONE", field.lower(), condition_type, param_1, param_2, is_date_field)
 
     @keyword
     def execute_query(self):
@@ -258,21 +310,12 @@ class RESTQuery:
         | Should Be Equal           | ${actual_num}                     | ${expected_num} |    
         """
         assert self.query_table is not None, "Query table must already be specified in this test case, but is not."
-        try:
-            start_year, start_month, start_day = start.split()[0].split("-")
-            start_hour, start_minute, start_second = start.split()[1].split(":")
-            end_year, end_month, end_day = end.split()[0].split("-")
-            end_hour, end_minute, end_second = end.split()[1].split(":")
-            start = datetime(int(start_year), int(start_month), int(start_day), int(start_hour), int(start_minute),
-                             int(start_second))
-            end = datetime(int(end_year), int(end_month), int(end_day), int(end_hour), int(end_minute), int(end_second))
-        except (KeyError, ValueError, IndexError):
-            raise AssertionError("Input date arguments were not provided in the correct format. Verify that they are in"
-                                 " the format YYYY-MM-DD hh:mm:ss.")
+        start_dt = self._parse_datetime(start)
+        end_dt = self._parse_datetime(end)
 
         query_resource = self.client.resource(api_path="/table/{query_table}".format(query_table=self.query_table))
         fields = ['sys_id']
-        content = query_resource.get(query="sys_created_onBETWEENjavascript:gs.dateGenerate('{start}')@javascript:gs.dateGenerate('{end}')".format(start=start, end=end), fields=fields)
+        content = query_resource.get(query="sys_created_onBETWEENjavascript:gs.dateGenerate('{start}')@javascript:gs.dateGenerate('{end}')".format(start=start_dt, end=end_dt), fields=fields)
         num_records = len(content.all())
         logger.info("Found {num} records in date range.".format(num=num_records))
         return num_records

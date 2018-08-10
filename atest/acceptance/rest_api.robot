@@ -3,7 +3,7 @@ Documentation    Acceptance tests for SNOW REST API keywords
 Library          SnowLibrary.RESTQuery
 
 *** Test Cases ***
-Test All REST Query Conditions
+Test REST Query Conditions
     [Tags]  rest    query   parameters
     Query Table Is  ticket
     Required Query Parameter Is     contact_type        EQUALS  Service Catalog
@@ -36,6 +36,15 @@ Test All REST Query Conditions
     Should Be True      ${reassignment_count} <= 101
     Should Be True      ${reassignment_count} >= -1
     Should Be Empty     ${u_task_categorization}
+
+Test REST Query Date Conditions
+    [Tags]  rest    query   dates
+    Query Table Is  proc_po
+    Required Query Parameter Is  sys_created_on     BETWEEN      2018-08-01 00:00:00    2018-08-15 23:59:59     is_date_field=True
+    Execute Query
+    ${short_description}=   Get Individual Response Field   short_description
+    Should Not Be Empty     ${short_description}
+
 
 Test Get Records Created In Date Range
     [Tags]  rest    query   dates
