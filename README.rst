@@ -42,9 +42,9 @@ From the project's root directory, run the following command to execute all of t
     > robot --outputdir atest\output\ atest\acceptance
 
 
-Running Unit Tests
-__________________
+Running Unit and Acceptance Tests
+_________________________________
 
 From the project's root directory, run the following command to run Python unit tests::
 
-    > pytest utest\
+    > pytest -v utest\
