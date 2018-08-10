@@ -36,3 +36,42 @@ Test All REST Query Conditions
     Should Be True      ${reassignment_count} <= 101
     Should Be True      ${reassignment_count} >= -1
     Should Be Empty     ${u_task_categorization}
+
+Test Get Records Created In Date Range
+    [Tags]  rest    query   dates
+    Query Table Is  proc_po
+    ${start_time}=             Set Variable    2018-06-01 00:00:01                # The date can be provided directly if desired.
+    ${end_time}=               Get Time                                            # Returns YYYY-MM-DD hh:mm:ss
+    ${actual_num}=             Get Records Created In Date Range  ${start_time}    ${end_time}
+    Should Be True             ${actual_num} > 0
+
+Test Get Records Created In Date Range Validates Input
+    [Tags]  rest    query   dates
+    Query Table Is  proc_po
+    ${start_time}=      Set Variable     michael String
+    ${end_time}=               Get Time                                            # Returns YYYY-MM-DD hh:mm:ss
+    ${msg}=                    Run Keyword And Expect Error     *   Get Records Created In Date Range       ${start_time}    ${end_time}
+    Should Contain             ${msg}   Input date arguments were not provided in the correct format
+    ${msg}=                    Run Keyword And Expect Error     *   Get Records Created In Date Range       ${end_time}    ${start_time}
+    Should Contain             ${msg}   Input date arguments were not provided in the correct format
+
+Test Get Records Created In Date Range Requires Query Table
+    [Tags]  rest    query   dates
+    ${start_time}=             Get Time         2018-06-01 00:00:01                # The date can be provided directly if desired.
+    ${end_time}=               Get Time                                            # Returns YYYY-MM-DD hh:mm:ss
+    ${msg}=                    Run Keyword And Expect Error     *   Get Records Created In Date Range  ${start_time}    ${end_time}
+    Should Contain             ${msg}   Query table must already be specified in this test case, but is not.
+
+Test Get Records Created Before
+    [Tags]  rest    query   dates
+    Query Table Is  proc_po
+    ${time}=                   Set Variable     2016-06-07 00:00:01
+    ${actual_num}=             Get Records Created Before  ${time}
+    Should Be True             ${actual_num} > 0
+
+Test Get Records Created After
+    [Tags]  rest    query   dates
+    Query Table Is  proc_po
+    ${time}=                   Set Variable     2018-06-01 00:00:01
+    ${actual_num}=             Get Records Created After  ${time}
+    Should Be True             ${actual_num} > 0
