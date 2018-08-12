@@ -16,11 +16,22 @@ class RESTQuery:
     This library implements keywords for retrieving current data for testing from ServiceNow. It leverages the 
     pysnow module. Keywords can be used in your test suite by importing SnowLibrary.RESTQuery.   Currently supported
     query types and operands are as follows (case-insensitive):
-    
-    VALID_QUERY_TYPES = ["EQUALS", "DOES NOT EQUAL", "CONTAINS", "DOES NOT CONTAIN" "STARTS WITH", "ENDS WITH",
-                         "IS EMPTY", "GREATER THAN", "LESS THAN"]
-                         
-    VALID_OPERANDS = ["AND", "OR", "NQ"]
+
+    *Valid query types*:
+     - ``EQUALS``
+     - ``DOES NOT EQUAL``
+     - ``CONTAINS``
+     - ``DOES NOT CONTAIN``
+     - ``STARTS WITH``
+     - ``ENDS WITH``
+     - ``IS EMPTY``
+     - ``GREATER THAN``
+     - ``LESS THAN``
+
+    *Valid query operators*:
+     - ``AND``
+     - ``OR``
+     - ``NQ``
     """
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
 
@@ -59,7 +70,8 @@ class RESTQuery:
         else:
             self.instance = urlparse(self.host).netloc.split(".")[0]
         if self.instance == "":
-            raise AssertionError("Unable to determine SNOW Instance. Verify that the SNOW_TEST_URL environment variable been set.")
+            raise AssertionError(
+                "Unable to determine SNOW Instance. Verify that the SNOW_TEST_URL environment variable been set.")
         self.client = pysnow.Client(instance=self.instance, user=self.user, password=self.password)
         self.query_table = query_table
         self.query = pysnow.QueryBuilder()
@@ -95,16 +107,18 @@ class RESTQuery:
 
         if param_1 is None and param_2 is None:
             if condition_type.upper() != "IS EMPTY":
-                raise AssertionError("Unexpected arguments for condition type {condition_type}: expected 1 or 2 arguments, but got "
-                                     "none.".format(condition_type=condition_type.upper()))
+                raise AssertionError(
+                    "Unexpected arguments for condition type {condition_type}: expected 1 or 2 arguments, but got "
+                    "none.".format(condition_type=condition_type.upper()))
             else:
                 logger.debug("sysparm_query contains: {q}".format(q=self.query._query))
                 self.query.is_empty()
 
         elif param_2 is None:
             if condition_type.upper() in ["IS EMPTY", "BETWEEN"]:
-                raise AssertionError("Unexpected arguments for condition type {condition_type}: expected 0 or 2 arguments,"
-                                     " but got 1.".format(condition_type=condition_type.upper()))
+                raise AssertionError(
+                    "Unexpected arguments for condition type {condition_type}: expected 0 or 2 arguments,"
+                    " but got 1.".format(condition_type=condition_type.upper()))
             else:
                 if condition_type.upper() == "GREATER THAN":
                     if isinstance(param_1, datetime):
@@ -138,8 +152,9 @@ class RESTQuery:
 
         else:
             if condition_type.upper() != "BETWEEN":
-                raise AssertionError("Unexpected arguments for condition type {condition_type}: expected 0 or 1 argument,"
-                                     " but got 2.".format(condition_type=condition_type.upper()))
+                raise AssertionError(
+                    "Unexpected arguments for condition type {condition_type}: expected 0 or 1 argument,"
+                    " but got 2.".format(condition_type=condition_type.upper()))
             else:
                 if isinstance(param_1, datetime) and isinstance(param_2, datetime):
                     self.query.between(param_1, param_2)
@@ -183,13 +198,13 @@ class RESTQuery:
     def add_query_parameter(self, logical, field, condition_type, param_1=None, param_2=None, is_date_field=False):
         """
         Adds a parameter to the query.  Expected arguments are a logical operator (e.g. AND, OR, NQ), the field or table
-        column to use (e.g. number, state), the condition type, and up to 2 query parameters depending on the type of 
-        query.  For example, the EMPTY query type does not require any parameters, CONTAINS requires one parameter, and 
-        BETWEEN requires two parameters. If the field that is being queried against in this parameter is a date field, 
-        then is_date_filed must be set to True or this keyword will fail in execution. In this case, parameters must also 
+        column to use (e.g. number, state), the condition type, and up to 2 query parameters depending on the type of
+        query.  For example, the EMPTY query type does not require any parameters, CONTAINS requires one parameter, and
+        BETWEEN requires two parameters. If the field that is being queried against in this parameter is a date field,
+        then is_date_field must be set to True or this keyword will fail in execution. In this case, parameters must also
         be provided in the format ``YYYY-MM-DD hh:mm:ss`` for proper parsing to a Python datetime object. For example:
-        
-        | Add Query Parameter | AND | sys_created_on | BETWEEN | 2018-08-10 00:00:00 | 2018-08-15 23:59:59 |
+
+        | Add Query Parameter | AND | sys_created_on | BETWEEN | 2018-08-10 00:00:00 | 2018-08-15 23:59:59 | is_date_field=True |
         """
         if is_date_field:
             if param_1 is not None:
@@ -209,22 +224,24 @@ class RESTQuery:
 
         else:
             if self._query_is_empty():
-                raise AssertionError("No query parameters have been specified yet. Use the ``Required Query Parameter Is`` keyword first.")
+                raise AssertionError(
+                    "No query parameters have been specified yet. Use the ``Required Query Parameter Is`` keyword first.")
             elif logical.upper() in self.VALID_OPERANDS and condition_type.upper() in self.VALID_QUERY_TYPES:
                 self._add_valid_query_parameter(logical, field.lower(), condition_type, param_1, param_2)
             else:
-                raise AssertionError("Invalid operand '{l}' and/or query type '{q}'.".format(l=logical, q=condition_type))
+                raise AssertionError(
+                    "Invalid operand '{l}' and/or query type '{q}'.".format(l=logical, q=condition_type))
 
     @keyword
     def required_query_parameter_is(self, field, condition_type, param_1=None, param_2=None, is_date_field=False):
         """
-        Adds the first (required) query parameter to a SNOW Query.  If another parameter has already been added, 
+        Adds the first (required) query parameter to a SNOW Query.  If another parameter has already been added,
         this keyword will fail. Otherwise, this is the same as `Add Query Parameter`.  If the field that is being
-        queried against in this parameter is a date field, then is_date_filed must be set to True or this keyword
+        queried against in this parameter is a date field, then is_date_field must be set to True or this keyword
         will fail in execution.  In this case, parameters must also be provided in the format ``YYYY-MM-DD hh:mm:ss``
         for proper parsing to a Python datetime object. For example:
-        
-        | Required Query Parameter Is | sys_created_on | BETWEEN | 2018-08-10 00:00:00 | 2018-08-15 23:59:59 |
+
+        | Required Query Parameter Is | sys_created_on | BETWEEN | 2018-08-10 00:00:00 | 2018-08-15 23:59:59 |  is_date_field=True |
         """
         self.add_query_parameter("NONE", field.lower(), condition_type, param_1, param_2, is_date_field)
 
@@ -232,12 +249,12 @@ class RESTQuery:
     def execute_query(self):
         """
         Executes the query that has been created with the specified conditions AND sets the response to the first record
-        in the returned data or None. If no query parameters are provided, an error is thrown. Keyword usage with 2+ 
+        in the returned data or None. If no query parameters are provided, an error is thrown. Keyword usage with 2+
         data records is not yet supported.
         """
         assert self.query_table is not None, "Query table must already be specified in this test case, but is not."
         query_resource = self.client.resource(api_path="/table/{query_table}".format(query_table=self.query_table))
-        try:    # Catch empty queries or errors making the request
+        try:  # Catch empty queries or errors making the request
             self.response = query_resource.get(query=self.query, stream=True).first_or_none()
         except (QueryEmpty, RequestException) as e:
             logger.error(e.args)
@@ -257,7 +274,8 @@ class RESTQuery:
         try:
             data = self.response[field_to_get]
         except KeyError:
-            raise AssertionError("Field not found in response from {table}: {field}".format(table=self.query_table, field=field_to_get))
+            raise AssertionError(
+                "Field not found in response from {table}: {field}".format(table=self.query_table, field=field_to_get))
         return data
 
     @keyword
@@ -265,10 +283,10 @@ class RESTQuery:
         """Returns the number of records created in the defined query_table after ``when``. The argument ``when`` must
         be in the following format: ``YYYY-MM-DD hh:mm:ss``. Use Robot Framework's BuiltIn Library keyword `Get Time` to
         dynamically get the required time in this format. The query table must be set using `Query Table Is` keyword
-        first.  This cannot be used in conjunction with other query parameters at this time and any other previously 
-        provided parameters in the test case will be ignored when making this query. NOTE: if the number of records 
+        first.  This cannot be used in conjunction with other query parameters at this time and any other previously
+        provided parameters in the test case will be ignored when making this query. NOTE: if the number of records
         exceeds 10K, 10K will STILL be the number returned. Example usage:
-        
+
         | Query Table Is            | proc_po                   |
         | ${time}=                  | Get Time                  |                       # Returns YYYY-MM-DD hh:mm:ss |
         | ${actual_num}=            | Get Records Created After | ${time}         |     # Returns the number of records created in proc_po after the given time. |
@@ -315,7 +333,9 @@ class RESTQuery:
 
         query_resource = self.client.resource(api_path="/table/{query_table}".format(query_table=self.query_table))
         fields = ['sys_id']
-        content = query_resource.get(query="sys_created_onBETWEENjavascript:gs.dateGenerate('{start}')@javascript:gs.dateGenerate('{end}')".format(start=start_dt, end=end_dt), fields=fields)
+        content = query_resource.get(
+            query="sys_created_onBETWEENjavascript:gs.dateGenerate('{start}')@javascript:gs.dateGenerate('{end}')".format(
+                start=start_dt, end=end_dt), fields=fields)
         num_records = len(content.all())
         logger.info("Found {num} records in date range.".format(num=num_records))
         return num_records
