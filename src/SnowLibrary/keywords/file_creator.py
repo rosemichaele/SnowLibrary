@@ -16,8 +16,8 @@ class DataFile:
     used in your test suite by importing SnowLibrary.DataFile as a Library. This is an example of the usage to create
     a test import file for the Oracle Cloud Requisitions Integration:
     
-    | Generate Requisitions Import File      |
-    | [Arguments] | ${absolute_file_name}    |
+    *Generate Requisitions Import File*
+    *[Arguments]*  ``${absolute_file_name}`` 
     | Define File Name | ${absolute_file_name} | 
     | Define Delimiter | COMMA | 
     | Define Field | header=SUPPLIER_ID         | min_length=15       |  max_length=15  |  data_type=integer | starts_with=3000  | 
@@ -70,14 +70,14 @@ class DataFile:
         """Define a data field which will be included in this file.  Required arguments are the type of data, which can
         be integer, string, or boolean. Optional keyword arguments include:
         
-        *required*:  Specify whether or not the field must always include data. True by default. Currently, does nothing with False.
-        *min_length*: The minimum length of the data in this field. Defaults to 1 and only used if `options` is not provided.
-        *max_length*: The maximum length of the data in this field. Defaults to 1000 and only used if `options` is not provided.
-        *options*: A comma-separated string of options for the values in this field, one of which will be used at random to populate the field in each row of data.
-        *regexp*:  Specify a regular expression string with which to generate data for this field.
-        *starts_with*:  Specify a string of characters that the data field should always begin with.  This is useful 
+        - ``required``:  Specify whether or not the field must always include data. True by default. Currently, does nothing with False.
+        - ``min_length``: The minimum length of the data in this field. Defaults to 1 and only used if `options` is not provided.
+        - ``max_length``: The maximum length of the data in this field. Defaults to 1000 and only used if `options` is not provided.
+        - ``options``: A comma-separated string of options for the values in this field, one of which will be used at random to populate the field in each row of data.
+        - ``regexp``:  Specify a regular expression string with which to generate data for this field.
+        - ``starts_with``:  Specify a string of characters that the data field should always begin with.  This is useful 
         record numbers in ServiceNow. For example, TKT5554821 starts with TKT. If provided, any regex passed in will be ignored.
-        *characters*: Indicate if the data field can only contains characters from a specific subtype.  Valid subtypes 
+        - ``characters``: Indicate if the data field can only contains characters from a specific subtype.  Valid subtypes 
         are letters, uppercase, lowercase, digits, printable, punctuation, nonwhitespace, nondigits, nonletters, 
         normal, postalsafe, urlsafe, domainsafe. CREDIT - `rstr module<https://pypi.org/project/rstr/ >`_.
         """
