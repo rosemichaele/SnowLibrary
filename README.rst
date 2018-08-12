@@ -1,7 +1,7 @@
 QA - Robot Framework -SnowLibrary
 =================================
 
-This project contains the ketword libraries for ServiceNow automated testing. The Python-based testing tool used
+This project contains the keyword libraries for ServiceNow automated testing. The Python-based testing tool used
 for this project is `Robot Framework <http://robotframework.org/>`_.
 
 Prerequisites
