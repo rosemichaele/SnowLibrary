@@ -21,6 +21,5 @@ setup(
                       'robotremoteserver', 'pysnow', 'robotframework-sshlibrary', 'rstr'],
     description='A Robot Framework Library with keywords for testing ServiceNow.',
     # Test requirements
-    setup_requires=['pytest-runner'],
     tests_require=['pytest'],
 )
