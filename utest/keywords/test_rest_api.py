@@ -117,3 +117,21 @@ class TestRESTQuery:
             r.add_query_parameter("OR", "sys_updated_on", "EQUALS", "2018-08-10 10:23:40")
         except AssertionError:
             pytest.fail("Unexpected AssertionError raised when setting date field query parameter.")
+
+    def test_add_parameter_with_and(self):
+        r = RESTQuery()
+        r.required_query_parameter_is("description", "CONTAINS", "michael")
+        r.add_query_parameter("AND", "status", "EQUALS", "Open")
+        assert r.query._query[-2] == "^"
+
+    def test_add_parameter_with_or(self):
+        r = RESTQuery()
+        r.required_query_parameter_is("description", "CONTAINS", "michael")
+        r.add_query_parameter("OR", "status", "EQUALS", "Open")
+        assert r.query._query[-2] == "^OR"
+
+    def test_add_parameter_with_nq(self):
+        r = RESTQuery()
+        r.required_query_parameter_is("description", "CONTAINS", "michael")
+        r.add_query_parameter("NQ", "status", "EQUALS", "Open")
+        assert r.query._query[-2] == "^NQ"

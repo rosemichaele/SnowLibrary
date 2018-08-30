@@ -101,7 +101,7 @@ class RESTQuery:
         elif logical.upper() == "AND":
             self.query.AND().field('{}'.format(field))
         elif logical.upper() == "OR":
-            self.query.AND().field('{}'.format(field))
+            self.query.OR().field('{}'.format(field))
         else:
             self.query.NQ().field('{}'.format(field))
 
