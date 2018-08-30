@@ -23,6 +23,11 @@ class TestRESTQuery:
             r = RESTQuery(host="")
         assert "Unable to determine SNOW Instance. Verify that the SNOW_TEST_URL environment variable been set." in str(e)
 
+    def test_new_rest_query_instance_whitespace_in_host_is_trimmed(self):
+        r = RESTQuery(host="    https://iceuat.service-now.com/  ")
+        assert r.host == "https://iceuat.service-now.com/"
+        assert r.instance == "iceuat"
+
     def test_cannot_add_query_parameter_first(self):
         r = RESTQuery()
         with pytest.raises(AssertionError) as e:

@@ -54,9 +54,9 @@ class RESTQuery:
 
         """
         if host is None:
-            self.host = os.environ.get("SNOW_TEST_URL")
+            self.host = os.environ.get("SNOW_TEST_URL").strip()
         else:
-            self.host = host
+            self.host = host.strip()
         if user is None:
             self.user = os.environ.get("SNOW_REST_USER")
         else:
