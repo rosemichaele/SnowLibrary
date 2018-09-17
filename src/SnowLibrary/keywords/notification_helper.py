@@ -56,14 +56,14 @@ class NotificationHelper:
             if(type=="sms"):
                 return self.sms_number + "|" + self.sev + "|" + business + "|" + self.stat + "|" + description
             elif(type=="email"):
-                return number + " " + self.sev + " " + business + " " + self.stat + " " + application + "|" + description
+                return number + " " + self.sev + " " + business + " " + self.stat + " " + application + " | " + description
             else:
                 raise AssertionError("Please enter the correct type, which is sms or email.")
         else:
             if (type == "sms"):
                 return self.sms_number + "|" + self.sev + "|" + business + "|" + self.stat + "|" + work_note
             elif (type == "email"):
-                return number + " " + self.sev + " " + business + " " + self.stat + " " + application + "|" + work_note
+                return number + " " + self.sev + " " + business + " " + self.stat + " " + application + " | " + work_note
             else:
                 raise AssertionError("Please enter the correct type, which is sms or email.")
 
