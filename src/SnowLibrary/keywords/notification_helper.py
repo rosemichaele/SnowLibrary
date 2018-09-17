@@ -14,7 +14,7 @@ class NotificationHelper:
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
 
     @keyword
-    def get_expected_notification_message(self, number, state, business, application, severity, description, type):
+    def get_expected_notification_message(self, number, state, business, application, severity, description, type, work_note=None):
         """
         Used to get the beginning part of expected message format.
         :param number: The transformed OIR number.
@@ -52,11 +52,18 @@ class NotificationHelper:
         else:
             raise AssertionError("Please enter the correct state, which is Work in Progress or Root Cause Pending.")
         #Get the expected message format
-        if(type=="sms"):
-            return self.sms_number + "|" + self.sev + "|" + business + "|" + self.stat + "|" + description
-        elif(type=="email"):
-            return number + " " + self.sev + " " + business + " " + self.stat + " " + application + "|" + description
+        if(work_note==None):
+            if(type=="sms"):
+                return self.sms_number + "|" + self.sev + "|" + business + "|" + self.stat + "|" + description
+            elif(type=="email"):
+                return number + " " + self.sev + " " + business + " " + self.stat + " " + application + "|" + description
+            else:
+                raise AssertionError("Please enter the correct type, which is sms or email.")
         else:
-            raise AssertionError("Please enter the correct type, which is sms or email.")
-
+            if (type == "sms"):
+                return self.sms_number + "|" + self.sev + "|" + business + "|" + self.stat + "|" + work_note
+            elif (type == "email"):
+                return number + " " + self.sev + " " + business + " " + self.stat + " " + application + "|" + work_note
+            else:
+                raise AssertionError("Please enter the correct type, which is sms or email.")
 
