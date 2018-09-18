@@ -67,3 +67,13 @@ class NotificationHelper:
             else:
                 raise AssertionError("Please enter the correct type, which is sms or email.")
 
+    @keyword
+    def get_user_phone_number(self,info):
+        """
+        Used to get user's phone number. 
+        :param info: The info get from Notification Preferences page.
+        :return: User's telephone number.
+        """
+        number = info.split(" ")
+        return number[1]
+
