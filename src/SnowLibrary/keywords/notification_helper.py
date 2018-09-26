@@ -135,7 +135,7 @@ class NotificationHelper:
         self.bridge_number = self._active_bridge_number_transform(domestic,access_code,pin_code)
 
         if (type == "sms"):
-            return self.sms_number + "|" + self.sev + "|" + business + "|" + self.stat + "||" + self.bridge_number
+            return self.sms_number + "|" + self.sev + "|" + business + "|" + self.stat + "|" + self.bridge_number
         elif (type == "email"):
             return number + " " + self.sev + " " + business + " " + self.stat + " " + application + " | " + description
         else:
