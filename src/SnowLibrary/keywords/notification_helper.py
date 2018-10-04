@@ -141,7 +141,7 @@ class NotificationHelper:
         else:
             raise AssertionError("Please enter the correct type, which is sms or email.")
 
-    def get_expected_special_notification_message(self,number,state,severity,business,application,description,type):
+    def get_expected_special_notification_message(self,number,state,severity,business,application,description,note,type):
         """
         Used to get the expected notification message format for special conditions.
         :param number: OIR record number.
@@ -150,6 +150,7 @@ class NotificationHelper:
         :param business: OIR record business.
         :param application: OIR record application.
         :param description: OIR record description.
+        :param note: OIR record work note.
         :param type: notification message type: sms or email.
         :return: The expected message format.
         """
@@ -158,7 +159,7 @@ class NotificationHelper:
         self.sev = self._oir_severity_transform(severity)
 
         if (type == "sms"):
-            return self.sms_number + "|" + self.sev + "|" + business + "|" + self.stat + "|"
+            return self.sms_number + "|" + self.sev + "|" + business + "|" + self.stat + "|" + note
         elif (type == "email"):
             return number + " " + self.sev + " " + business + " " + self.stat + " " + application + " | " + description
         else:
