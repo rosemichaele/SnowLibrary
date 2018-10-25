@@ -165,4 +165,20 @@ class NotificationHelper:
         else:
             raise AssertionError("Please enter the correct type, which is sms or email.")
 
-
+    def get_expected_change_email_notification_message(self,number,description,approval_group,type):
+        """
+        Used to get the expected email notification for change request.
+        :param number: Change Request number.
+        :param description: Change Request description.
+        :param approval_group: The required approval group name.
+        :param type: Change notification type. (create, approve, reject)
+        :return: The expected message format.
+        """
+        if(type == "create"):
+            return number + " - updated - " + description
+        elif (type == "approve"):
+            return number + " - requires your approval or rejection for group - " + approval_group
+        elif (type == "reject"):
+            return number + " - rejected - " + description
+        else:
+            raise AssertionError("Please enter the correct type, which is create, approve or reject.")
