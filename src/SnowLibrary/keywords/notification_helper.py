@@ -180,5 +180,7 @@ class NotificationHelper:
             return number + " - requires your approval or rejection for group - " + approval_group
         elif (type == "reject"):
             return number + " - rejected - " + description
+        elif (type == "complete"):
+            return number + " - approved - " + description
         else:
-            raise AssertionError("Please enter the correct type, which is create, approve or reject.")
+            raise AssertionError("Please enter the correct type, which is create, approve, complete or reject.")
