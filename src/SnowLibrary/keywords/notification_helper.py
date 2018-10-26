@@ -171,7 +171,7 @@ class NotificationHelper:
         :param number: Change Request number.
         :param description: Change Request description.
         :param approval_group: The required approval group name.
-        :param type: Change notification type. (create, approve, reject)
+        :param type: Change notification type. (create, approve, reject,complete)
         :return: The expected message format.
         """
         if(type == "create"):
@@ -184,3 +184,13 @@ class NotificationHelper:
             return number + " - approved - " + description
         else:
             raise AssertionError("Please enter the correct type, which is create, approve, complete or reject.")
+
+    def get_expected_ctask_email_notification_message(self,number,description,type):
+        """
+        
+        :param number: CTASK number.
+        :param description: CTASK description
+        :param type: notification type. (approve)
+        :return: The expected message format.
+        """
+        return number + " authorized - " + description
