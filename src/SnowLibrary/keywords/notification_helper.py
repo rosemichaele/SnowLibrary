@@ -165,4 +165,32 @@ class NotificationHelper:
         else:
             raise AssertionError("Please enter the correct type, which is sms or email.")
 
+    def get_expected_change_email_notification_message(self,number,description,approval_group,type):
+        """
+        Used to get the expected email notification for change request.
+        :param number: Change Request number.
+        :param description: Change Request description.
+        :param approval_group: The required approval group name.
+        :param type: Change notification type. (create, approve, reject,complete)
+        :return: The expected message format.
+        """
+        if(type == "create"):
+            return number + " - updated - " + description
+        elif (type == "approve"):
+            return number + " - requires your approval or rejection for group - " + approval_group
+        elif (type == "reject"):
+            return number + " - rejected - " + description
+        elif (type == "complete"):
+            return number + " - approved - " + description
+        else:
+            raise AssertionError("Please enter the correct type, which is create, approve, complete or reject.")
 
+    def get_expected_ctask_email_notification_message(self,number,description,type):
+        """
+        
+        :param number: CTASK number.
+        :param description: CTASK description
+        :param type: notification type. (approve)
+        :return: The expected message format.
+        """
+        return number + " authorized - " + description
