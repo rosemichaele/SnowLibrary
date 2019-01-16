@@ -1,6 +1,7 @@
 *** Settings ***
 Documentation    Acceptance tests for SNOW REST API keywords
 Library          SnowLibrary.RESTQuery
+Library          SnowLibrary.RESTInsert
 
 *** Test Cases ***
 Test REST Query Conditions
@@ -84,3 +85,34 @@ Test Get Records Created After
     ${time}=                   Set Variable     2018-06-01 00:00:01
     ${actual_num}=             Get Records Created After  ${time}
     Should Be True             ${actual_num} > 0
+
+Test Insert Record validate table
+    [Tags]  rest    insert  table
+    ${msg}=                    Run Keyword And Expect Error    *   Insert Table Is                  tickt
+    Should Contain             ${msg}   Insert table not found, please check the table name
+
+Test Insert Record Parameters Requires Insert Table
+    [Tags]  rest    insert   table
+    ${values}=                 create dictionary            short description       this is a test
+    ${msg}=                    Run Keyword And Expect Error    *   Insert Record Parameters     ${values}
+    Should Contain             ${msg}   Insert table must already be specified in this test case, but is not
+
+Test Insert Record Parameters validate field
+    [Tags]  rest    insert  table
+    Insert Table Is                  change_request
+    ${values}=                 create dictionary            short_description       this is a test          u_business     ICE Inc.            Catgory       Software
+    ${msg}=                    Run Keyword And Expect Error    *   Insert Record Parameters     ${values}
+    Should Contain             ${msg}   Field not found in response from change_request: Catgory
+
+Test Insert Record
+    [Tags]  rest    insert  record
+    Insert Table Is                  u_customer_contact_rest
+    ${values}=                 create dictionary            u_assignment_group      **ICE Link Account Management      u_caller      John O'Rourke         u_caller_email      john.orourke1234@citimax.com
+    ...                                                     u_caller_phone          1-888-555-5555      u_company      Citigroup Global Markets Limited To The Max      u_company_address       1 Park Ave
+    ...                                                     u_company_city          New York            u_company_country       USA         u_company_state      NY     u_customer_urgency      Medium
+    ...                                                     u_description           This is the detailed description        u_do_not_email      true        u_environment       Prod    u_issue_type        Request
+    ...                                                     u_send_from             icelinkhelp@theice.com      u_business      ICE Link        u_service    ICELink - Multiple     u_task_categorization   API
+    ...                                                     u_short_description     Short Description for Customer Contact      u_template      ICE NUEF Customer Request       u_watch_list    karen.johnson@theice.com
+
+    Insert Record Parameters        ${values}
+    Insert Record

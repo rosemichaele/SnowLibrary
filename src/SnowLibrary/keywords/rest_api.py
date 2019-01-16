@@ -1,6 +1,7 @@
 import os
 import sys
 from datetime import datetime
+from datetime import timedelta
 from urllib.parse import urlparse
 
 import pysnow
@@ -186,9 +187,7 @@ class RESTQuery:
         self._reset_query()
         self.required_query_parameter_is("sys_id", "EQUALS", sys_id)
         self.execute_query()
-        return self.response
-
-    @keyword
+        return self.response    @keyword
     def query_table_is(self, query_table):
         """Sets the table that will be used for the query."""
         self.query_table = query_table
@@ -339,3 +338,89 @@ class RESTQuery:
         num_records = len(content.all())
         logger.info("Found {num} records in date range.".format(num=num_records))
         return num_records
+
+class RESTInsert:
+    """This library implements keywords for inserting records for testing in ServiceNow. It leverages the pysnow module. Keywords can be used in your test suite by importing SnowLibrary.RESTInsert."""
+
+    ROBOT_LIBRARY_SCOPE = "TEST CASE"
+
+    def __init__(self, host=None, user=None, password=None, insert_table=None, response=None):
+
+        """The following arguments can be optionally provided when importing this library:
+        - ``host``: The URL to your target ServiceNow instance (e.g. https://iceuat.service-now.com/). If none is provided, the library will attempt to use the ``SNOW_TEST_URL`` environment variable.
+                - ``user``: The username to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the ``SNOW_REST_USER`` environment variable.
+                - ``password``:  The password to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the ``SNOW_REST_PASS`` environment variable.
+                - ``insert_table``: The table to insert record into.  This can be changed or set at any time with the `Insert Table Is` keyword.
+                - ``response``: Set the response object from the ServiceNow REST API (intended to be used for testing).
+        """
+
+        if host is None:
+            self.host = os.environ.get("SNOW_TEST_URL").strip()
+        else:
+            self.host = host.strip()
+
+        if user is None:
+            self.user = os.environ.get("SNOW_REST_USER")
+        else:
+            self.user = user
+
+        if password is None:
+            self.password = os.environ.get("SNOW_REST_PASS")
+        else:
+            self.password = password
+
+        if "http" not in self.host:
+            self.instance = urlparse(self.host).path.split(".")[0]
+        else:
+            self.instance = urlparse(self.host).netloc.split(".")[0]
+
+        if self.instance == "":
+            raise AssertionError(
+                "Unable to determine SNOW Instance. Verify that the SNOW_TEST_URL environment variable been set.")
+
+        self.client = pysnow.Client(instance=self.instance, user=self.user, password=self.password)
+        self.insert_table = insert_table
+        self.response = response
+
+    @keyword
+    def insert_table_is(self, insert_table):
+        """Sets the table that will be used for the insert."""
+
+        r = RESTQuery()
+        r.query_table_is("sys_db_object")
+        r.required_query_parameter_is("name", "EQUALS", insert_table)
+        r.execute_query()
+        if r.response is None:
+            raise AssertionError("Insert table not found, please check the table name")
+        else:
+            self.insert_table = insert_table
+            logger.info("Insert table is: {insert_table}".format(insert_table=insert_table))
+
+    @keyword
+    def insert_record_parameters(self, new_record_payload):
+
+        """"Adds the payload to the query, expected arguments are ......"""
+
+        if self.insert_table is None:
+            raise AssertionError("Insert table must already be specified in this test case, but is not")
+        elif len(new_record_payload) == 0:
+            raise AssertionError("No values specified for insert. Expected at least one argument")
+        else:
+            r2 = RESTQuery()
+            r2.query_table_is(self.insert_table)
+            query_date =  datetime.now() - timedelta(days=7)
+            r2.required_query_parameter_is ("sys_created_on","GREATER THAN", query_date)
+            r2.execute_query()
+            for field in new_record_payload:
+                r2.get_individual_response_field(field)
+
+            self.new_record_payload = new_record_payload
+
+
+    @keyword
+    def insert_record(self):
+        insert_resource = self.client.resource(api_path="/table/{insert_table}".format(insert_table=self.insert_table))
+        result = insert_resource.create(payload=self.new_record_payload)
+        print(result)
+        return result
+

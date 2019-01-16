@@ -1,4 +1,5 @@
 from .rest_api import RESTQuery
+from .rest_api import RESTInsert
 from .file_creator import DataFile
 from .notification_helper import NotificationHelper
 
