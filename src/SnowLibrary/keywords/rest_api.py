@@ -187,7 +187,9 @@ class RESTQuery:
         self._reset_query()
         self.required_query_parameter_is("sys_id", "EQUALS", sys_id)
         self.execute_query()
-        return self.response    @keyword
+        return self.response
+
+    @keyword
     def query_table_is(self, query_table):
         """Sets the table that will be used for the query."""
         self.query_table = query_table
