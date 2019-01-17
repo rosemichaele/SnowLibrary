@@ -1,4 +1,4 @@
-from .keywords import RESTQuery
+from .keywords import RESTQuery, RESTInsert
 from .keywords import DataFile
 from .keywords import NotificationHelper
 
