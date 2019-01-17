@@ -350,10 +350,10 @@ class RESTInsert:
 
         """The following arguments can be optionally provided when importing this library:
         - ``host``: The URL to your target ServiceNow instance (e.g. https://iceuat.service-now.com/). If none is provided, the library will attempt to use the ``SNOW_TEST_URL`` environment variable.
-                - ``user``: The username to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the ``SNOW_REST_USER`` environment variable.
-                - ``password``:  The password to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the ``SNOW_REST_PASS`` environment variable.
-                - ``insert_table``: The table to insert record into.  This can be changed or set at any time with the `Insert Table Is` keyword.
-                - ``response``: Set the response object from the ServiceNow REST API (intended to be used for testing).
+        - ``user``: The username to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the ``SNOW_REST_USER`` environment variable.
+        - ``password``:  The password to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the ``SNOW_REST_PASS`` environment variable.
+        - ``insert_table``: The table to insert record into.  This can be changed or set at any time with the `Insert Table Is` keyword.
+        - ``response``: Set the response object from the ServiceNow REST API (intended to be used for testing).
         """
 
         if host is None:
@@ -386,7 +386,7 @@ class RESTInsert:
 
     @keyword
     def insert_table_is(self, insert_table):
-        """Sets the table that will be used for the insert."""
+        """Sets the table that will be used for the insert. It will throw an error if the table name is not found in ServiceNow"""
 
         r = RESTQuery()
         r.query_table_is("sys_db_object")
@@ -401,7 +401,7 @@ class RESTInsert:
     @keyword
     def insert_record_parameters(self, new_record_payload):
 
-        """"Adds the payload to the query, expected arguments are ......"""
+        """Adds the payload to the query, it accepts a dictionary type of object of key value pairs specifying values for fields on the record to be inserted. It also checks for empty object and validates the fields against the specified table in the earlier function """
 
         if self.insert_table is None:
             raise AssertionError("Insert table must already be specified in this test case, but is not")
@@ -421,8 +421,9 @@ class RESTInsert:
 
     @keyword
     def insert_record(self):
+
+        """This keyword inserts the record in Servicenow by calling Create function from pysnow. It returns the sysid of the newly created record"""
         insert_resource = self.client.resource(api_path="/table/{insert_table}".format(insert_table=self.insert_table))
         result = insert_resource.create(payload=self.new_record_payload)
-        print(result)
-        return result
-
+        sys_id = result['sys_id']
+        return sys_id

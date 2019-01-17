@@ -107,12 +107,12 @@ Test Insert Record Parameters validate field
 Test Insert Record
     [Tags]  rest    insert  record
     Insert Table Is                  u_customer_contact_rest
-    ${values}=                 create dictionary            u_assignment_group      **ICE Link Account Management      u_caller      John O'Rourke         u_caller_email      john.orourke1234@citimax.com
-    ...                                                     u_caller_phone          1-888-555-5555      u_company      Citigroup Global Markets Limited To The Max      u_company_address       1 Park Ave
-    ...                                                     u_company_city          New York            u_company_country       USA         u_company_state      NY     u_customer_urgency      Medium
-    ...                                                     u_description           This is the detailed description        u_do_not_email      true        u_environment       Prod    u_issue_type        Request
-    ...                                                     u_send_from             icelinkhelp@theice.com      u_business      ICE Link        u_service    ICELink - Multiple     u_task_categorization   API
-    ...                                                     u_short_description     Short Description for Customer Contact      u_template      ICE NUEF Customer Request       u_watch_list    karen.johnson@theice.com
-
+    ${values}=                 create dictionary            u_assignment_group      **ICE Link Account Management      u_caller      John O'Rourke      u_caller_email     john.orourke1234@citimax.com
+    ...                                                     u_caller_phone        1-888-555-5555        u_company      Citigroup Global Markets Limited To The Max      u_company_address       1 Park Ave
+    ...                                                     u_company_city        New York      u_company_country      USA      u_company_state     NY      u_customer_urgency      Medium
+    ...                                                     u_description         This is the detailed description     u_do_not_email    true       u_environment     Prod      u_issue_type    Request
+    ...                                                     u_send_from           icelinkhelp@theice.com           u_business       ICE Link        u_service         ICELink - Multiple        u_task_categorization       API
+    ...                                                     u_short_description     Short Description for Customer Contact      u_template      ICE NUEF Customer Request       u_watch_list    karen.johnson@theice.com,yuting.wang@theice.com
     Insert Record Parameters        ${values}
-    Insert Record
+    ${Sys_id}=             Insert Record
+    Should Not Be Empty     ${Sys_id}
