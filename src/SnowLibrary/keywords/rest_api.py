@@ -342,7 +342,9 @@ class RESTQuery:
         return num_records
 
 class RESTInsert:
-    """This library implements keywords for inserting records for testing in ServiceNow. It leverages the pysnow module. Keywords can be used in your test suite by importing SnowLibrary.RESTInsert."""
+    """This library implements keywords for inserting records for testing in ServiceNow. It leverages the pysnow module. Keywords can be used in your test suite by importing SnowLibrary.RESTInsert.
+    - Make sure the SNOW_REST_USER has ICE_REST_POST role in the subprod instance in which you wish to use the library and related keywords to insert a record
+    - Never use RESTInsert library and keywords with instance ice.service-now.com"""
 
     ROBOT_LIBRARY_SCOPE = "TEST CASE"
 
