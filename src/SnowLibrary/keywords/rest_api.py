@@ -341,6 +341,7 @@ class RESTQuery:
         logger.info("Found {num} records in date range.".format(num=num_records))
         return num_records
 
+
 class RESTInsert:
     """This library implements keywords for inserting records for testing in ServiceNow. It leverages the pysnow module. Keywords can be used in your test suite by importing SnowLibrary.RESTInsert.
     - Make sure the SNOW_REST_USER has ICE_REST_POST role in the subprod instance in which you wish to use the library and related keywords to insert a record
@@ -389,7 +390,6 @@ class RESTInsert:
     @keyword
     def insert_table_is(self, insert_table):
         """Sets the table that will be used for the insert. It will throw an error if the table name is not found in ServiceNow"""
-
         r = RESTQuery()
         r.query_table_is("sys_db_object")
         r.required_query_parameter_is("name", "EQUALS", insert_table)
@@ -402,9 +402,7 @@ class RESTInsert:
 
     @keyword
     def insert_record_parameters(self, new_record_payload):
-
         """Adds the payload to the query, it accepts a dictionary type of object of key value pairs specifying values for fields on the record to be inserted. It also checks for empty object and validates the fields against the specified table in the earlier function """
-
         if self.insert_table is None:
             raise AssertionError("Insert table must already be specified in this test case, but is not")
         elif len(new_record_payload) == 0:
@@ -423,7 +421,6 @@ class RESTInsert:
 
     @keyword
     def insert_record(self):
-
         """This keyword inserts the record in Servicenow by calling Create function from pysnow. It returns the sysid of the newly created record"""
         insert_resource = self.client.resource(api_path="/table/{insert_table}".format(insert_table=self.insert_table))
         result = insert_resource.create(payload=self.new_record_payload)

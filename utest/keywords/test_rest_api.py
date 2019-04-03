@@ -6,7 +6,6 @@ from SnowLibrary.keywords.rest_api import RESTQuery
 from SnowLibrary.keywords.rest_api import RESTInsert
 
 
-
 class TestRESTQuery:
 
     def test_default_new_rest_query_object(self):
@@ -142,6 +141,7 @@ class TestRESTQuery:
         r.required_query_parameter_is("description", "CONTAINS", "michael")
         r.add_query_parameter("NQ", "status", "EQUALS", "Open")
         assert r.query._query[-2] == "^NQ"
+
 
 class TestRESTInsert:
     def test_default_new_rest_insert_object(self):
