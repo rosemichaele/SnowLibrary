@@ -2,6 +2,7 @@
 Documentation    Acceptance tests for SNOW REST API keywords
 Library          SnowLibrary.RESTQuery
 Library          SnowLibrary.RESTInsert
+Library          Collections
 
 *** Test Cases ***
 Test REST Query Conditions
@@ -43,6 +44,8 @@ Test REST Query Date Conditions
     Query Table Is  proc_po
     Required Query Parameter Is  sys_created_on     BETWEEN      2018-08-01 00:00:00    2018-08-15 23:59:59     is_date_field=True
     Execute Query
+    ${num_records}=                 Get Response Record Count
+    Should Be Equal As Integers     ${num_records}  1
     ${short_description}=   Get Individual Response Field   short_description
     Should Not Be Empty     ${short_description}
 
@@ -116,3 +119,39 @@ Test Insert Record
     Insert Record Parameters        ${values}
     ${Sys_id}=             Insert Record
     Should Not Be Empty     ${Sys_id}
+
+Test REST Query Can Return Multiple Records
+    [Tags]  rest    multiple
+    Query Table Is                  cmdb_ci_zone
+    Required Query Parameter Is     operational_status  EQUALS  1   # Operational
+    Add Query Parameter             AND     location.type   CONTAINS    Datacenter Zone     # Example query parameters that should contain multiple results
+    Execute Query                   multiple=True   # Optional flag, default is False
+    ${num_records}=                 Get Response Record Count
+    Should Be True                  ${num_records} > 1
+
+Test Robot Error For Get Response Record Count When Query Not Yet Executed
+    [Tags]  rest    multiple
+    Run Keyword And Expect Error    No query has been executed yet.      Get Response Record Count
+
+Test Get Record Details From Response When Multiple Is True
+    [Tags]  rest    multiple
+    Query Table Is                  cmdb_ci_zone
+    Required Query Parameter Is     operational_status  EQUALS  1
+    Add Query Parameter             AND     location.type   CONTAINS    Datacenter Zone     # Example query parameters that should contain multiple results
+    Include Fields In Response      location.name
+    Execute Query                   multiple=True
+    @{location_names}=              Get Response Field Values   location.name
+    ${loc_names_length}=            Get Length      ${location_names}
+    Should Be True                  ${loc_names_length} > 1
+
+Test Sort Multiple Query Results By Created Date (Ascending)
+    [Tags]  rest    multiple
+    Query Table Is                  cmdb_ci_zone
+    Required Query Parameter Is     operational_status  EQUALS  1
+    Add Query Parameter             AND     location.type   CONTAINS    Datacenter Zone     # Example query parameters that should contain multiple results
+    Add Sort                        sys_created_on
+    Include Fields In Response      sys_created_on
+    @{created_dates}=               Get Response Field Values   sys_created_on
+    @{list_copy}=                   Copy List   ${created_dates}
+    Sort List                       ${created_dates}
+    Lists Should Be Equal           ${created_dates}    ${list_copy}
