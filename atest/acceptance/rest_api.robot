@@ -1,5 +1,5 @@
 *** Settings ***
-Documentation    Acceptance tests for SNOW REST API keywords
+Documentation    Acceptance tests for SnowLibrary REST API keywords.
 Library          SnowLibrary.RESTQuery
 Library          SnowLibrary.RESTInsert
 Library          Collections
@@ -145,7 +145,7 @@ Test Get Record Details From Response When Multiple Is True
     ${loc_names_length}=            Get Length      ${location_names}
     ${loc_creators_length}=         Get Length      ${location_creators}
     Should Be True                  ${loc_names_length} > 1
-    Should Be Equal                 ${loc_creators_length}      ${loc_names_length}
+    Should Be Equal As Integers     ${loc_creators_length}      ${loc_names_length}
 
 Test Sort Multiple Query Results By Created Date (Ascending)
     [Tags]  rest    multiple
@@ -167,8 +167,41 @@ Test Sort Multiple Query Results By Created Date (Descending)
     Add Query Parameter             AND     location.type   CONTAINS    Datacenter Zone     # Example query parameters that should contain multiple results
     Add Sort                        sys_created_on  ascending=${FALSE}
     Include Fields In Response      sys_created_on      sys_updated_on
-    Execute Query                   multiple=True
+    Execute Query                   multiple=${TRUE}
     @{created_dates}=               Get Response Field Values   sys_created_on
     @{list_copy}=                   Copy List   ${created_dates}
     Sort List                       ${created_dates}
     Run Keyword And Expect Error    Lists are different:*     Lists Should Be Equal     ${created_dates}    ${list_copy}
+
+Test When Max Records Returned (2k)
+    [Tags]  rest    multiple    max
+    Query Table Is                  u_customer_contact
+    Required Query Parameter Is     active  EQUALS  true
+    ${seven_days_ago}=              Get Time    timestamp   NOW - 7d
+    Add Query Parameter             AND     sys_created_on  GREATER THAN   ${seven_days_ago}   is_date_field=${TRUE}
+    Add Sort                        sys_updated_on  ascending=${TRUE}
+    Execute Query                   multiple=${TRUE}
+    @{updated_dates}=               Get Response Field Values   sys_updated_on
+    ${records}=                     Get Response Record Count
+
+Test Field Not Found In Response (Multiple)
+    [Tags]  rest    multiple    not found
+    Query Table Is                  cmdb_ci_zone
+    Required Query Parameter Is     operational_status  EQUALS  1
+    Add Query Parameter             AND     location.type   CONTAINS    Datacenter Zone     # Example query parameters that should contain multiple results
+    Add Sort                        sys_created_on  ascending=${FALSE}
+    Include Fields In Response      sys_created_on      sys_updated_on
+    Execute Query                   multiple=${TRUE}
+    Run Keyword And Expect Error    KeyError*    Get Response Field Values   michael
+
+Test Desired Fields Returned From Response
+    [Tags]  rest    multiple
+    Query Table Is                  cmdb_ci_zone
+    Required Query Parameter Is     operational_status  EQUALS  1
+    Add Query Parameter             AND     location.type   CONTAINS    Datacenter Zone     # Example query parameters that should contain multiple results
+    Add Sort                        sys_created_on  ascending=${FALSE}
+    Include Fields In Response      sys_created_on      sys_updated_on  operational_status
+    Execute Query                   multiple=${TRUE}
+    @{created_dates}=               Get Response Field Values   sys_created_on
+    @{updated_dates}=               Get Response Field Values   sys_updated_on
+    @{statuses}=                    Get Response Field Values   operational_status

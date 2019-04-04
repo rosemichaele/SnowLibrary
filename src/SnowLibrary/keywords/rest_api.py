@@ -255,7 +255,9 @@ class RESTQuery:
         """
         Executes the query that has been created with the specified conditions AND sets the response to the first record
         in the returned data or None if ``multiple`` is *False* (default). If ``multiple`` is *True*, sets the response
-        to a generator containing all records matching the defined conditions (limit 10k, see pysnow.response.Response).
+        to a list containing all records matching the defined conditions (limit 2k). For reliable results when querying
+        large amounts of data, limit the response fields to only what you need (using `Include Fields In Response`). The
+        query can take several seconds to complete and potentially fails if the data set is too large in some cases.
         If a sort condition has been set with `Add Sort` or specific fields to include on the response records have been
         set with `Include Fields In Response`, those requirements are honored here. If no query parameters are provided
         or no table has been defined, an error is thrown.
@@ -265,10 +267,15 @@ class RESTQuery:
         try:  # Catch empty queries or errors making the request
             if self.desired_response_fields:
                 logger.info("Response fields specified in query parameters.")
-                response = query_resource.get(query=self.query, stream=True, fields=self.desired_response_fields)
+                response = query_resource.get(query=self.query,
+                                              stream=True,
+                                              fields=self.desired_response_fields,
+                                              limit=2000)
             else:
                 logger.info("No response fields specified in query parameters. All fields will be returned.")
-                response = query_resource.get(query=self.query, stream=True)
+                response = query_resource.get(query=self.query,
+                                              stream=True,
+                                              limit=2000)
         except (QueryEmpty, RequestException) as e:
             logger.error(e.args)
             self._reset_query()
@@ -289,11 +296,15 @@ class RESTQuery:
     def add_sort(self, field_name, ascending=True):
         """
         Adds a sort requirement on ``field_name`` to the query parameters. By default, the field will be sorted in
-        ascending order (a to z). Set ``ascending`` to *False* for descending order (z to a).
+        ascending order (a to z). Set ``ascending`` to *False* for descending order (z to a). *NOTE*: Sort conditions
+        must be added after all other query parameters have been added (i.e. right before `Execute Query` in most
+        cases). Failing to do so could result in unexpected or unordered data being returned in the response.
 
         | Query Table Is | ticket         |
         | Add Sort       | sys_created_on | ascending=${FALSE} | # Sort tickets on the created date, most recent first |
         """
+        if not self._query_is_empty():
+            self.query.AND()
         if ascending:
             logger.info("Sorting records by {} in ascending order.".format(field_name))
             self.query.field(field_name.lower()).order_ascending()  # lowercase for convenience
@@ -328,7 +339,15 @@ class RESTQuery:
         """
         if self.response is None:
             raise QueryNotExecuted("No query has been executed.")
-        return [record[field_name.lower()] for record in self.response]  # lowercase for convenience
+        try:
+            values = [record[field_name.lower()] for record in self.response]  # lowercase for convenience
+        except KeyError:
+            logger.error("Field not found in response from {q}: {f}".format(q=self.query_table,
+                                                                            f=field_name)
+                         )
+            logger.info("Available fields were: " + str(", ".join(self.response[0].keys())))
+            raise
+        return values
 
     @keyword
     def get_response_record_count(self):
@@ -432,10 +451,14 @@ class RESTInsert:
     def __init__(self, host=None, user=None, password=None, insert_table=None, response=None):
 
         """The following arguments can be optionally provided when importing this library:
-        - ``host``: The URL to your target ServiceNow instance (e.g. https://iceuat.service-now.com/). If none is provided, the library will attempt to use the ``SNOW_TEST_URL`` environment variable.
-        - ``user``: The username to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the ``SNOW_REST_USER`` environment variable.
-        - ``password``:  The password to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the ``SNOW_REST_PASS`` environment variable.
-        - ``insert_table``: The table to insert record into.  This can be changed or set at any time with the `Insert Table Is` keyword.
+        - ``host``: The URL to your target ServiceNow instance (e.g. https://iceuat.service-now.com/).
+                    If none is provided, the library will attempt to use the ``SNOW_TEST_URL`` environment variable.
+        - ``user``: The username to use when authenticating the ServiceNow REST client. This can, and *should*, be set
+                    using the ``SNOW_REST_USER`` environment variable.
+        - ``password``:  The password to use when authenticating the ServiceNow REST client. This can, and *should*, be
+                         set using the ``SNOW_REST_PASS`` environment variable.
+        - ``insert_table``: The table to insert record into.  This can be changed or set at any time with the
+                            `Insert Table Is` keyword.
         - ``response``: Set the response object from the ServiceNow REST API (intended to be used for testing).
         """
 
@@ -469,7 +492,10 @@ class RESTInsert:
 
     @keyword
     def insert_table_is(self, insert_table):
-        """Sets the table that will be used for the insert. It will throw an error if the table name is not found in ServiceNow"""
+        """
+        Sets the table that will be used for the insert. It will throw an error if the table name is not found
+        in ServiceNow.
+        """
         r = RESTQuery()
         r.query_table_is("sys_db_object")
         r.required_query_parameter_is("name", "EQUALS", insert_table)
@@ -482,7 +508,10 @@ class RESTInsert:
 
     @keyword
     def insert_record_parameters(self, new_record_payload):
-        """Adds the payload to the query, it accepts a dictionary type of object of key value pairs specifying values for fields on the record to be inserted. It also checks for empty object and validates the fields against the specified table in the earlier function """
+        """
+        Adds the payload to the query, it accepts a dictionary type of object of key value pairs specifying values for
+        fields on the record to be inserted. It also checks for empty object and validates the fields against the specified
+        table in the earlier function."""
         if self.insert_table is None:
             raise AssertionError("Insert table must already be specified in this test case, but is not")
         elif len(new_record_payload) == 0:
@@ -495,13 +524,12 @@ class RESTInsert:
             r2.execute_query()
             for field in new_record_payload:
                 r2.get_individual_response_field(field)
-
             self.new_record_payload = new_record_payload
-
 
     @keyword
     def insert_record(self):
-        """This keyword inserts the record in Servicenow by calling Create function from pysnow. It returns the sysid of the newly created record"""
+        """This keyword inserts the record in Servicenow by calling Create function from pysnow. It returns the sysid
+        of the newly created record."""
         insert_resource = self.client.resource(api_path="/table/{insert_table}".format(insert_table=self.insert_table))
         result = insert_resource.create(payload=self.new_record_payload)
         sys_id = result['sys_id']
