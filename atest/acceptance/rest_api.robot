@@ -125,24 +125,27 @@ Test REST Query Can Return Multiple Records
     Query Table Is                  cmdb_ci_zone
     Required Query Parameter Is     operational_status  EQUALS  1   # Operational
     Add Query Parameter             AND     location.type   CONTAINS    Datacenter Zone     # Example query parameters that should contain multiple results
-    Execute Query                   multiple=True   # Optional flag, default is False
+    Execute Query                   multiple=${TRUE}   # Optional flag, default is False
     ${num_records}=                 Get Response Record Count
     Should Be True                  ${num_records} > 1
 
 Test Robot Error For Get Response Record Count When Query Not Yet Executed
     [Tags]  rest    multiple
-    Run Keyword And Expect Error    No query has been executed yet.      Get Response Record Count
+    Run Keyword And Expect Error    QueryNotExecuted: No query has been executed. Use the Execute Query keyword to retrieve records.      Get Response Record Count
 
 Test Get Record Details From Response When Multiple Is True
     [Tags]  rest    multiple
     Query Table Is                  cmdb_ci_zone
     Required Query Parameter Is     operational_status  EQUALS  1
     Add Query Parameter             AND     location.type   CONTAINS    Datacenter Zone     # Example query parameters that should contain multiple results
-    Include Fields In Response      location.name
-    Execute Query                   multiple=True
+    Include Fields In Response      location.name   sys_created_by
+    Execute Query                   multiple=${TRUE}
     @{location_names}=              Get Response Field Values   location.name
+    @{location_creators}=           Get Response Field Values   sys_created_by
     ${loc_names_length}=            Get Length      ${location_names}
+    ${loc_creators_length}=         Get Length      ${location_creators}
     Should Be True                  ${loc_names_length} > 1
+    Should Be Equal                 ${loc_creators_length}      ${loc_names_length}
 
 Test Sort Multiple Query Results By Created Date (Ascending)
     [Tags]  rest    multiple
@@ -150,8 +153,22 @@ Test Sort Multiple Query Results By Created Date (Ascending)
     Required Query Parameter Is     operational_status  EQUALS  1
     Add Query Parameter             AND     location.type   CONTAINS    Datacenter Zone     # Example query parameters that should contain multiple results
     Add Sort                        sys_created_on
-    Include Fields In Response      sys_created_on
+    Include Fields In Response      sys_created_on      sys_updated_on
+    Execute Query                   multiple=${TRUE}
     @{created_dates}=               Get Response Field Values   sys_created_on
     @{list_copy}=                   Copy List   ${created_dates}
     Sort List                       ${created_dates}
     Lists Should Be Equal           ${created_dates}    ${list_copy}
+
+Test Sort Multiple Query Results By Created Date (Descending)
+    [Tags]  rest    multiple
+    Query Table Is                  cmdb_ci_zone
+    Required Query Parameter Is     operational_status  EQUALS  1
+    Add Query Parameter             AND     location.type   CONTAINS    Datacenter Zone     # Example query parameters that should contain multiple results
+    Add Sort                        sys_created_on  ascending=${FALSE}
+    Include Fields In Response      sys_created_on      sys_updated_on
+    Execute Query                   multiple=True
+    @{created_dates}=               Get Response Field Values   sys_created_on
+    @{list_copy}=                   Copy List   ${created_dates}
+    Sort List                       ${created_dates}
+    Run Keyword And Expect Error    Lists are different:*     Lists Should Be Equal     ${created_dates}    ${list_copy}
