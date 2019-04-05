@@ -10,7 +10,7 @@ from robot.api import logger
 from robot.api.deco import keyword
 from robot.libraries.BuiltIn import BuiltIn
 
-from ..exceptions import QueryNotExecuted
+from SnowLibrary.exceptions import QueryNotExecuted
 
 
 class RESTQuery:

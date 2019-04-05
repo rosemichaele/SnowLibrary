@@ -152,7 +152,7 @@ Test Sort Multiple Query Results By Created Date (Ascending)
     Query Table Is                  cmdb_ci_zone
     Required Query Parameter Is     operational_status  EQUALS  1
     Add Query Parameter             AND     location.type   CONTAINS    Datacenter Zone     # Example query parameters that should contain multiple results
-    Add Sort                        sys_created_on
+    Add Sort                        sys_created_on      # Ascending order is default
     Include Fields In Response      sys_created_on      sys_updated_on
     Execute Query                   multiple=${TRUE}
     @{created_dates}=               Get Response Field Values   sys_created_on
@@ -168,10 +168,15 @@ Test Sort Multiple Query Results By Created Date (Descending)
     Add Sort                        sys_created_on  ascending=${FALSE}
     Include Fields In Response      sys_created_on      sys_updated_on
     Execute Query                   multiple=${TRUE}
-    @{created_dates}=               Get Response Field Values   sys_created_on
-    @{list_copy}=                   Copy List   ${created_dates}
-    Sort List                       ${created_dates}
-    Run Keyword And Expect Error    Lists are different:*     Lists Should Be Equal     ${created_dates}    ${list_copy}
+    @{descending_created_dates}=    Get Response Field Values   sys_created_on
+    Reverse List   ${descending_created_dates}
+    Required Query Parameter Is     operational_status  EQUALS  1
+    Add Query Parameter             AND     location.type   CONTAINS    Datacenter Zone
+    Add Sort                        sys_created_on
+    Include Fields In Response      sys_created_on      sys_updated_on
+    Execute Query                   multiple=${TRUE}
+    @{ascending_created_dates}=     Get Response Field Values   sys_created_on
+    Lists Should Be Equal           ${ascending_created_dates}    ${descending_created_dates}
 
 Test When Max Records Returned (2k)
     [Tags]  rest    multiple    max
@@ -183,6 +188,7 @@ Test When Max Records Returned (2k)
     Execute Query                   multiple=${TRUE}
     @{updated_dates}=               Get Response Field Values   sys_updated_on
     ${records}=                     Get Response Record Count
+    Should Be Equal As Integers     ${records}  2000
 
 Test Field Not Found In Response (Multiple)
     [Tags]  rest    multiple    not found
