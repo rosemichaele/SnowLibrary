@@ -173,6 +173,14 @@ class TestRESTQuery:
             r.get_response_field_values("sys_created_on")
         assert "No query has been executed." in str(e)
 
+    def test_reset_query(self):
+        r = RESTQuery()
+        r.required_query_parameter_is("active", "EQUALS", "true")
+        r.include_fields_in_response("name", "short_description")
+        r._reset_query()    # Called at the end of execute_query in practice
+        assert r._query_is_empty()
+        assert not r.desired_response_fields
+
 
 class TestRESTInsert:
     def test_default_new_rest_insert_object(self):
