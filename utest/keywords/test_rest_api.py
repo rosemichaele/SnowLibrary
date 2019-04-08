@@ -4,7 +4,7 @@ import pytest
 
 from SnowLibrary.keywords.rest_api import RESTQuery
 from SnowLibrary.keywords.rest_api import RESTInsert
-
+from SnowLibrary.exceptions import QueryNotExecuted
 
 
 class TestRESTQuery:
@@ -142,6 +142,45 @@ class TestRESTQuery:
         r.required_query_parameter_is("description", "CONTAINS", "michael")
         r.add_query_parameter("NQ", "status", "EQUALS", "Open")
         assert r.query._query[-2] == "^NQ"
+
+    def test_get_response_record_count_when_set(self):
+        r = RESTQuery()
+        r.record_count = 10
+        assert r.record_count == r.get_response_record_count()
+
+    def test_get_record_count_raises_when_not_set(self):
+        r = RESTQuery()
+        with pytest.raises(QueryNotExecuted) as e:
+            r.get_response_record_count()
+        assert "No query has been executed. Use the Execute Query keyword to retrieve records." in str(e)
+
+    def test_desired_response_fields_empty_by_default(self):
+        r = RESTQuery()
+        assert r.desired_response_fields == []
+
+    def test_add_fields_to_desired_response_fields(self):
+        r = RESTQuery()
+        r.include_fields_in_response("number")
+        r.include_fields_in_response("state", "location.name")
+        assert len(r.desired_response_fields) == 3
+        assert ("number" in r.desired_response_fields
+                and "state" in r.desired_response_fields
+                and "location.name" in r.desired_response_fields)
+
+    def test_get_response_field_values_raise_if_response_empty(self):
+        r = RESTQuery()
+        with pytest.raises(QueryNotExecuted) as e:
+            r.get_response_field_values("sys_created_on")
+        assert "No query has been executed." in str(e)
+
+    def test_reset_query(self):
+        r = RESTQuery()
+        r.required_query_parameter_is("active", "EQUALS", "true")
+        r.include_fields_in_response("name", "short_description")
+        r._reset_query()    # Called at the end of execute_query in practice
+        assert r._query_is_empty()
+        assert not r.desired_response_fields
+
 
 class TestRESTInsert:
     def test_default_new_rest_insert_object(self):

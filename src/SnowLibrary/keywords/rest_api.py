@@ -1,5 +1,4 @@
 import os
-import sys
 from datetime import datetime
 from datetime import timedelta
 from urllib.parse import urlparse
@@ -10,6 +9,8 @@ from requests.exceptions import RequestException
 from robot.api import logger
 from robot.api.deco import keyword
 from robot.libraries.BuiltIn import BuiltIn
+
+from SnowLibrary.exceptions import QueryNotExecuted
 
 
 class RESTQuery:
@@ -77,6 +78,8 @@ class RESTQuery:
         self.query_table = query_table
         self.query = pysnow.QueryBuilder()
         self.response = response
+        self.record_count = None
+        self.desired_response_fields = list()
 
     @staticmethod
     def _parse_datetime(date):
@@ -176,6 +179,7 @@ class RESTQuery:
         Intended to be used after a query is executed.
         """
         self.query = pysnow.QueryBuilder()
+        self.desired_response_fields = list()
 
     @keyword
     def get_record_by_sys_id(self, sys_id):
@@ -202,10 +206,10 @@ class RESTQuery:
         column to use (e.g. number, state), the condition type, and up to 2 query parameters depending on the type of
         query.  For example, the EMPTY query type does not require any parameters, CONTAINS requires one parameter, and
         BETWEEN requires two parameters. If the field that is being queried against in this parameter is a date field,
-        then is_date_field must be set to True or this keyword will fail in execution. In this case, parameters must also
+        then ``is_date_field`` must be set to True or this keyword will fail in execution. In this case, parameters must also
         be provided in the format ``YYYY-MM-DD hh:mm:ss`` for proper parsing to a Python datetime object. For example:
 
-        | Add Query Parameter | AND | sys_created_on | BETWEEN | 2018-08-10 00:00:00 | 2018-08-15 23:59:59 | is_date_field=True |
+        | Add Query Parameter | AND | sys_created_on | BETWEEN | 2018-08-10 00:00:00 | 2018-08-15 23:59:59 | is_date_field=${TRUE} |
         """
         if is_date_field:
             if param_1 is not None:
@@ -238,30 +242,125 @@ class RESTQuery:
         """
         Adds the first (required) query parameter to a SNOW Query.  If another parameter has already been added,
         this keyword will fail. Otherwise, this is the same as `Add Query Parameter`.  If the field that is being
-        queried against in this parameter is a date field, then is_date_field must be set to True or this keyword
+        queried against in this parameter is a date field, then ``is_date_field`` must be set to True or this keyword
         will fail in execution.  In this case, parameters must also be provided in the format ``YYYY-MM-DD hh:mm:ss``
         for proper parsing to a Python datetime object. For example:
 
-        | Required Query Parameter Is | sys_created_on | BETWEEN | 2018-08-10 00:00:00 | 2018-08-15 23:59:59 |  is_date_field=True |
+        | Required Query Parameter Is | sys_created_on | BETWEEN | 2018-08-10 00:00:00 | 2018-08-15 23:59:59 |  is_date_field=${TRUE} |
         """
         self.add_query_parameter("NONE", field.lower(), condition_type, param_1, param_2, is_date_field)
 
     @keyword
-    def execute_query(self):
+    def execute_query(self, multiple=False):
         """
         Executes the query that has been created with the specified conditions AND sets the response to the first record
-        in the returned data or None. If no query parameters are provided, an error is thrown. Keyword usage with 2+
-        data records is not yet supported.
+        in the returned data or None if ``multiple`` is *False* (default). If ``multiple`` is *True*, sets the response
+        to a list containing all records matching the defined conditions (limit 2k). For reliable results when querying
+        large amounts of data, limit the response fields to only what you need (using `Include Fields In Response`). The
+        query can take several seconds to complete and potentially fails if the data set is too large in some cases.
+        If a sort condition has been set with `Add Sort` or specific fields to include on the response records have been
+        set with `Include Fields In Response`, those requirements are honored here. If no query parameters are provided
+        or no table has been defined, an error is thrown.
         """
         assert self.query_table is not None, "Query table must already be specified in this test case, but is not."
         query_resource = self.client.resource(api_path="/table/{query_table}".format(query_table=self.query_table))
         try:  # Catch empty queries or errors making the request
-            self.response = query_resource.get(query=self.query, stream=True).first_or_none()
+            if self.desired_response_fields:
+                logger.info("Response fields specified in query parameters.")
+                response = query_resource.get(query=self.query,
+                                              stream=True,
+                                              fields=self.desired_response_fields,
+                                              limit=2000)
+            else:
+                logger.info("No response fields specified in query parameters. All fields will be returned.")
+                response = query_resource.get(query=self.query,
+                                              stream=True,
+                                              limit=2000)
         except (QueryEmpty, RequestException) as e:
             logger.error(e.args)
             self._reset_query()
             raise
+        if not multiple:
+            self.response = response.first_or_none()
+            if self.response is None:
+                self.record_count = 0
+            else:
+                self.record_count = 1
+        else:
+            self.response = list(response.all())
+            self.record_count = len(self.response)
+        logger.info("Number of records returned from query: " + str(self.record_count))
         self._reset_query()
+
+    @keyword
+    def add_sort(self, field_name, ascending=True):
+        """
+        Adds a sort requirement on ``field_name`` to the query parameters. By default, the field will be sorted in
+        ascending order (a to z). Set ``ascending`` to *False* for descending order (z to a). *NOTE*: Sort conditions
+        must be added after all other query parameters have been added (i.e. right before `Execute Query` in most
+        cases). Failing to do so could result in unexpected or unordered data being returned in the response.
+
+        | Query Table Is | ticket         |
+        | Add Sort       | sys_created_on | ascending=${FALSE} | # Sort tickets on the created date, most recent first |
+        """
+        if not self._query_is_empty():
+            self.query.AND()
+        if ascending:
+            logger.info("Sorting records by {} in ascending order.".format(field_name))
+            self.query.field(field_name.lower()).order_ascending()  # lowercase for convenience
+            logger.debug("sysparm_query contains: {q}".format(q=self.query._query))
+        else:
+            logger.info("Sorting records by {} in descending order.".format(field_name))
+            self.query.field(field_name.lower()).order_descending()
+            logger.debug("sysparm_query contains: {q}".format(q=self.query._query))
+
+    @keyword
+    def include_fields_in_response(self, *args):
+        """
+        Specify fields to include in the response matching query parameters. By default none are set, and all fields
+        defined in the schema for the query table will be returned. If any fields have been specified, ONLY those fields
+        will be included in the response. This is mainly useful for getting data from referenced records. Usage:
+
+        | Query Table Is             | cmdb_ci_zone   |
+        | Include Fields In Response | location.name  | # Get the display name for the location of the Datacenter Zone |
+        | Include Fields In Response | sys_created_on | # Get the creation date of the Datacenter Zone as well.        |
+        | Include Fields In Response | name           | sys_created_by | # Specify multiple fields.                    |
+
+        """
+        logger.info("Adding to desired response fields: " + str(args))
+        self.desired_response_fields.extend([a.lower() for a in args])  # lowercase for convenience
+
+    @keyword()
+    def get_response_field_values(self, field_name):
+        """
+        Return a list containing the value of ``field_name`` for all records in the response. This should only be
+        used if ``multiple`` = *True* has been specified in `Execute Query``. If the field does not exist, a KeyError
+        will be raised.
+        """
+        if self.response is None:
+            raise QueryNotExecuted("No query has been executed.")
+        try:
+            values = [record[field_name.lower()] for record in self.response]  # lowercase for convenience
+        except KeyError:
+            logger.error("Field not found in response from {q}: {f}".format(q=self.query_table,
+                                                                            f=field_name)
+                         )
+            logger.info("Available fields were: " + str(", ".join(self.response[0].keys())))
+            raise
+        return values
+
+    @keyword
+    def get_response_record_count(self):
+        """
+        Returns the number of records returned by the executed query.  If no query has been executed, raises
+        *QueryNotExecuted* exception with an explanation. If multiple queries are executed in a single test case,
+        this keyword will return the number of records returned from the most recently executed query, without
+        a warning in this case.
+        """
+        if self.record_count is None:
+            raise QueryNotExecuted("No query has been executed. Use the Execute Query keyword to retrieve records.")
+        else:
+            return self.record_count
 
     @keyword
     def get_individual_response_field(self, field_to_get):
@@ -341,6 +440,7 @@ class RESTQuery:
         logger.info("Found {num} records in date range.".format(num=num_records))
         return num_records
 
+
 class RESTInsert:
     """This library implements keywords for inserting records for testing in ServiceNow. It leverages the pysnow module. Keywords can be used in your test suite by importing SnowLibrary.RESTInsert.
     - Make sure the SNOW_REST_USER has ICE_REST_POST role in the subprod instance in which you wish to use the library and related keywords to insert a record
@@ -351,10 +451,14 @@ class RESTInsert:
     def __init__(self, host=None, user=None, password=None, insert_table=None, response=None):
 
         """The following arguments can be optionally provided when importing this library:
-        - ``host``: The URL to your target ServiceNow instance (e.g. https://iceuat.service-now.com/). If none is provided, the library will attempt to use the ``SNOW_TEST_URL`` environment variable.
-        - ``user``: The username to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the ``SNOW_REST_USER`` environment variable.
-        - ``password``:  The password to use when authenticating the ServiceNow REST client. This can, and *should*, be set using the ``SNOW_REST_PASS`` environment variable.
-        - ``insert_table``: The table to insert record into.  This can be changed or set at any time with the `Insert Table Is` keyword.
+        - ``host``: The URL to your target ServiceNow instance (e.g. https://iceuat.service-now.com/).
+                    If none is provided, the library will attempt to use the ``SNOW_TEST_URL`` environment variable.
+        - ``user``: The username to use when authenticating the ServiceNow REST client. This can, and *should*, be set
+                    using the ``SNOW_REST_USER`` environment variable.
+        - ``password``:  The password to use when authenticating the ServiceNow REST client. This can, and *should*, be
+                         set using the ``SNOW_REST_PASS`` environment variable.
+        - ``insert_table``: The table to insert record into.  This can be changed or set at any time with the
+                            `Insert Table Is` keyword.
         - ``response``: Set the response object from the ServiceNow REST API (intended to be used for testing).
         """
 
@@ -388,8 +492,10 @@ class RESTInsert:
 
     @keyword
     def insert_table_is(self, insert_table):
-        """Sets the table that will be used for the insert. It will throw an error if the table name is not found in ServiceNow"""
-
+        """
+        Sets the table that will be used for the insert. It will throw an error if the table name is not found
+        in ServiceNow.
+        """
         r = RESTQuery()
         r.query_table_is("sys_db_object")
         r.required_query_parameter_is("name", "EQUALS", insert_table)
@@ -402,9 +508,10 @@ class RESTInsert:
 
     @keyword
     def insert_record_parameters(self, new_record_payload):
-
-        """Adds the payload to the query, it accepts a dictionary type of object of key value pairs specifying values for fields on the record to be inserted. It also checks for empty object and validates the fields against the specified table in the earlier function """
-
+        """
+        Adds the payload to the query, it accepts a dictionary type of object of key value pairs specifying values for
+        fields on the record to be inserted. It also checks for empty object and validates the fields against the specified
+        table in the earlier function."""
         if self.insert_table is None:
             raise AssertionError("Insert table must already be specified in this test case, but is not")
         elif len(new_record_payload) == 0:
@@ -417,14 +524,12 @@ class RESTInsert:
             r2.execute_query()
             for field in new_record_payload:
                 r2.get_individual_response_field(field)
-
             self.new_record_payload = new_record_payload
-
 
     @keyword
     def insert_record(self):
-
-        """This keyword inserts the record in Servicenow by calling Create function from pysnow. It returns the sysid of the newly created record"""
+        """This keyword inserts the record in Servicenow by calling Create function from pysnow. It returns the sysid
+        of the newly created record."""
         insert_resource = self.client.resource(api_path="/table/{insert_table}".format(insert_table=self.insert_table))
         result = insert_resource.create(payload=self.new_record_payload)
         sys_id = result['sys_id']
