@@ -3,6 +3,8 @@ import os
 import pytest
 
 from SnowLibrary.keywords.rest_api import RESTQuery
+from SnowLibrary.keywords.rest_api import RESTInsert
+from SnowLibrary.exceptions import QueryNotExecuted
 
 
 class TestRESTQuery:
@@ -22,6 +24,11 @@ class TestRESTQuery:
         with pytest.raises(AssertionError) as e:
             r = RESTQuery(host="")
         assert "Unable to determine SNOW Instance. Verify that the SNOW_TEST_URL environment variable been set." in str(e)
+
+    def test_new_rest_query_instance_whitespace_in_host_is_trimmed(self):
+        r = RESTQuery(host="    https://iceuat.service-now.com/  ")
+        assert r.host == "https://iceuat.service-now.com/"
+        assert r.instance == "iceuat"
 
     def test_cannot_add_query_parameter_first(self):
         r = RESTQuery()
@@ -117,3 +124,117 @@ class TestRESTQuery:
             r.add_query_parameter("OR", "sys_updated_on", "EQUALS", "2018-08-10 10:23:40")
         except AssertionError:
             pytest.fail("Unexpected AssertionError raised when setting date field query parameter.")
+
+    def test_add_parameter_with_and(self):
+        r = RESTQuery()
+        r.required_query_parameter_is("description", "CONTAINS", "michael")
+        r.add_query_parameter("AND", "status", "EQUALS", "Open")
+        assert r.query._query[-2] == "^"
+
+    def test_add_parameter_with_or(self):
+        r = RESTQuery()
+        r.required_query_parameter_is("description", "CONTAINS", "michael")
+        r.add_query_parameter("OR", "status", "EQUALS", "Open")
+        assert r.query._query[-2] == "^OR"
+
+    def test_add_parameter_with_nq(self):
+        r = RESTQuery()
+        r.required_query_parameter_is("description", "CONTAINS", "michael")
+        r.add_query_parameter("NQ", "status", "EQUALS", "Open")
+        assert r.query._query[-2] == "^NQ"
+
+    def test_get_response_record_count_when_set(self):
+        r = RESTQuery()
+        r.record_count = 10
+        assert r.record_count == r.get_response_record_count()
+
+    def test_get_record_count_raises_when_not_set(self):
+        r = RESTQuery()
+        with pytest.raises(QueryNotExecuted) as e:
+            r.get_response_record_count()
+        assert "No query has been executed. Use the Execute Query keyword to retrieve records." in str(e)
+
+    def test_desired_response_fields_empty_by_default(self):
+        r = RESTQuery()
+        assert r.desired_response_fields == []
+
+    def test_add_fields_to_desired_response_fields(self):
+        r = RESTQuery()
+        r.include_fields_in_response("number")
+        r.include_fields_in_response("state", "location.name")
+        assert len(r.desired_response_fields) == 3
+        assert ("number" in r.desired_response_fields
+                and "state" in r.desired_response_fields
+                and "location.name" in r.desired_response_fields)
+
+    def test_get_response_field_values_raise_if_response_empty(self):
+        r = RESTQuery()
+        with pytest.raises(QueryNotExecuted) as e:
+            r.get_response_field_values("sys_created_on")
+        assert "No query has been executed." in str(e)
+
+    def test_reset_query(self):
+        r = RESTQuery()
+        r.required_query_parameter_is("active", "EQUALS", "true")
+        r.include_fields_in_response("name", "short_description")
+        r._reset_query()    # Called at the end of execute_query in practice
+        assert r._query_is_empty()
+        assert not r.desired_response_fields
+
+
+class TestRESTInsert:
+    def test_default_new_rest_insert_object(self):
+        i = RESTInsert()
+        assert i.instance == "iceuat", "SNOW_TEST_URL environment variable has not been set correctly, it should be configured to the iceuat instance."
+        assert i.user is not None and i.user == os.environ.get("SNOW_REST_USER"), "SNOW_REST_USER environment variable has not been set."
+        assert i.password is not None and i.password == os.environ.get("SNOW_REST_PASS"), "SNOW_REST_PASS environment variable has not been set."
+        assert i.insert_table is None
+        assert i.response is None
+
+    def test_new_rest_insert_instance(self):
+        i = RESTInsert(host="iceqa.service-now.com")
+        assert i.instance == "iceqa"
+        with pytest.raises(AssertionError) as e:
+            i = RESTInsert(host="")
+        assert "Unable to determine SNOW Instance. Verify that the SNOW_TEST_URL environment variable been set." in str(e)
+
+    def test_new_rest_insert_instance_whitespace_in_host_is_trimmed(self):
+        i = RESTInsert(host="    https://iceuat.service-now.com/  ")
+        assert i.host == "https://iceuat.service-now.com/"
+        assert i.instance == "iceuat"
+
+    def test_insert_table_not_valid(self):
+        i = RESTInsert()
+        with pytest.raises(AssertionError) as e:
+            i.insert_table_is("abcd")
+        assert "Insert table not found, please check the table name" in str(e)
+
+    def test_insert_table_not_specified(self):
+        i = RESTInsert()
+        with pytest.raises(AssertionError) as e:
+            i.insert_record_parameters("short desc test")
+        assert "Insert table must already be specified in this test case, but is not" in str(e)
+
+    def test_insert_payload_not_specified(self):
+        i = RESTInsert()
+        values = {}
+        with pytest.raises(AssertionError) as e:
+            i.insert_table_is("ticket")
+            i.insert_record_parameters(values)
+        assert "No values specified for insert. Expected at least one argument" in str(e)
+
+    def test_insert_payload_not_valid(self):
+        i = RESTInsert()
+        values = {"short_description":"this is a test","test123":"yes"}
+        with pytest.raises(AssertionError) as e:
+            i.insert_table_is("ticket")
+            i.insert_record_parameters(values)
+        assert "Field not found in response from ticket: test123" in str(e)
+
+    def test_insert(self):
+        i = RESTInsert()
+        values = {"short_description": "this is a test"}
+        i.insert_table_is("ticket")
+        i.insert_record_parameters(values)
+        result = i.insert_record()
+        assert result is not None
